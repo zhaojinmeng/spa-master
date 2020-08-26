@@ -1,0 +1,257 @@
+<style>
+    #abnormalForm .layui-form-item {
+        margin-top: 20px;
+        margin-bottom: 0;
+    }
+
+    #abnormalForm .layui-form-item .layui-inline {
+        margin-bottom: 25px;
+        margin-right: 0;
+    }
+
+    .layui-input {
+        display: inline;
+        width: 45%;
+    }
+
+    span {
+        font-weight: 400;
+    }
+
+</style>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-tab layui-tab-brief">
+                <ul class="layui-tab-title">
+                    <li class="layui-this" id="HKI">恒生</li>
+                    <li id="SZ">上证</li>
+                    <li id="SPX">标普</li>
+                </ul>
+                <div class="layui-tab-content" style="width: 60%">
+                    <form id="abnormalForm" class="layui-form" lay-filter="abnormalForm">
+                        <div class="layui-tab-item layui-show">
+                            <div class="layui-form-item layui-row">
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">上涨比率:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_rate" placeholder="请输入上涨百分比" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number" lay-verify="required" required/>
+                                        <span>%</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">下跌比率:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_rate" placeholder="请输入下跌百分比" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="message" lay-verify="required" required/>
+                                        <span>%</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">一级:</label>
+                                    <div class="layui-input-block">
+                                        <input type="number" name="rise_first_time" placeholder="请输入时间秒数"
+                                               autocomplete="off"
+                                               class="layui-input" lay-verType="number" lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">一级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_first_time" class="layui-input" lay-verType="number"
+                                               autocomplete="off"
+                                               type="number" placeholder="请输入时间秒数"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">二级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_second_time" placeholder="请输入时间秒数" autocomplete="off"
+                                               class="layui-input" lay-verType="number"
+                                               lay-verify="required" required/>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">二级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_second_time" class="layui-input" type="number"
+                                               autocomplete="off"
+                                               lay-verType="number" placeholder="请输入时间秒数"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">三级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_third_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">三级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_third_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">四级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_four_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">四级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_four_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">五级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_five_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">五级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_five_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">六级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="rise_six_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                                <div class="layui-inline layui-col-md6">
+                                    <label class="layui-form-label layui-form-required">六级:</label>
+                                    <div class="layui-input-block">
+                                        <input name="depreciate_six_time" placeholder="请输入时间秒数" class="layui-input"
+                                               autocomplete="off"
+                                               lay-verType="number"
+                                               type="number"
+                                               lay-verify="required" required>
+                                        <span>秒</span>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-bottom text-right" style="padding-right: 20%">
+                            <button type="reset" class="layui-btn layui-btn-primary">&emsp;重置&emsp;</button>
+                            <button class="layui-btn" lay-filter="formAdvSubmit" lay-submit>&emsp;提交&emsp;</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['layer', 'admin', 'form', 'setter'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        const setter = layui.setter;
+        const admin = layui.admin;
+        setter.baseServer = "";
+        form.render();
+        // submit
+        const submit_abnormal = function (e) {
+            // console.log(e);
+            const form_data = e.field;
+            const plate_name = $('.layui-tab-title .layui-this');
+            form_data.plate = plate_name.text();
+            form_data.token = setter.getToken()
+            from_data.TrdEnv = setter.TrdEnv
+            admin.req(setter.djangoAPI + "modifyIndexExcept/", form_data, function (r) {
+                layer.msg("修改成功", {icon: 1});
+
+            }, 'post');
+            return false;
+        }
+
+        function req_plate_data(plate = "恒生") {
+            admin.req(setter.djangoAPI + "getIndexExcept/", {
+                plate: plate,
+                'token': setter.getToken(),
+                'TrdEnv': setter.TrdEnv,
+
+            }, function (r) {
+                if (r.code === 0) {
+                    const data = r.data;
+                    form.val("abnormalForm", data);
+
+                }
+            })
+        }
+
+        form.on('submit(formAdvSubmit)', submit_abnormal);
+        // get value to fill into form
+        $('.layui-tab-title').bind('click', function (e) {
+            const target = e.target;
+            const plate_name = $(target).text();
+            req_plate_data(plate_name);
+        })
+        // admin.req(setter.djangoAPI+"getIndexExcept/")
+        req_plate_data();
+
+    })
+</script>

@@ -1,0 +1,532 @@
+<style>
+    /** 数据表格中的select尺寸调整 */
+    .layui-table-view .layui-table-cell .layui-select-title .layui-input {
+        height: 28px;
+        line-height: 28px;
+    }
+
+    .layui-table-view [lay-size="lg"] .layui-table-cell .layui-select-title .layui-input {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .layui-table-view [lay-size="lg"] .layui-table-cell .layui-select-title .layui-input {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .layui-table-view [lay-size="sm"] .layui-table-cell .layui-select-title .layui-input {
+        height: 20px;
+        line-height: 20px;
+    }
+
+    .layui-table-view [lay-size="sm"] .layui-table-cell .layui-btn-xs {
+        height: 18px;
+        line-height: 18px;
+    }
+
+    body .layui-layer-dialog .layui-layer-btn0 {
+        background: green;
+        border-color: green;
+        color: white;
+    }
+</style>
+
+<script class="modifyCodeForm" type="text/html" id="keywordOpen">
+    <div class="layui-form-item">
+        <label class="layui-form-label">请输入标签</label>
+        <div class="layui-input-block">
+            <input id="keyinputshow" value="" class="layui-hide">
+        </div>
+    </div>
+</script>
+
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">搜索:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu">
+                                <input name="word_or_name" id="searchInputCode" class="layui-input" type="text"
+                                       autocomplete="off"
+                                       placeholder="请输入股票代码"/>
+                                <ul class="dropdown-menu-nav" id="searchCodeList">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn" lay-filter="tbBasicTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                        <button class="layui-btn icon-btn" id="addStockCode" type="button">
+                            <i class="layui-icon">&#xe654;</i>添加
+                        </button>
+                        <button class="layui-btn icon-btn layui-bg-red" id="deleteCode" type="button">
+                            <i class="layui-icon">&#xe640;</i>删除
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="tbBasicTable" lay-filter="tbBasicTable"></table>
+        </div>
+    </div>
+</div>
+
+
+<div class="additionRow" hidden>
+    <div class="layui-card" id="addCard" style="width: 600px;">
+        <div class="layui-card-body">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 140px;">输入股票名称或代码</label>
+                <div class="layui-input-block">
+                    <div class="dropdown-menu" id="realMenu">
+                        <input id="codeInput" value="" class="layui-hide" autocomplete="off"/>
+                        <input type="text" id="realInput" class="layui-input"
+                               style="width: 80%;border: solid 1px grey"
+                               placeholder="+请输入">
+                    </div>
+                    <ul id="stockNotificationList" class="dropdown-menu-nav" style="margin: 10px 0
+                     0 59px">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+        <button class="layui-btn layui-btn-sm" lay-event="update">编辑</button>
+    </div>
+</script>
+<!-- 表格操作列 -->
+<script type="text/html" id="dayButtons">
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="kLine">日k</button>
+</script>
+<script type="text/html" id="shareOptions">
+    {{# if(d.code.indexOf('US') !== -1 ) { }}
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="share">期权</button>
+    {{# }else{ }}
+    <button type="button" class="layui-btn layui-btn-sm layui-btn-disabled" lay-event="shareDisabled">期权</button>
+    {{# }}}
+</script>
+<script type="text/html" id="transactionButtons">
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-red" lay-event="trade">交易</button>
+</script>
+<!-- 表格性别选择列 -->
+<script type="text/html" id="tbBasicTbSex">
+    <div class="ew-select-fixed">
+        <select lay-filter="tbBasicTbSexSel">
+            <option value="">请选择</option>
+            <option value="男" {{d.sex=='男'?'selected':''}}>男</option>
+            <option value="女" {{d.sex=='女'?'selected':''}}>女</option>
+        </select>
+    </div>
+</script>
+<!-- js部分 -->
+<script>
+    // 根据飘红变颜色
+
+
+    layui.use(['layer', 'jquery', 'index', 'admin', 'setter', 'form', 'table', 'util', 'dropdown', "tagsInput"], function () {
+        let admin = layui.admin;
+        let setter = layui.setter;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var dropdown = layui.dropdown;
+        let tagsInput = layui.tagsInput;
+        let index = layui.index;
+        setter.baseServer = '';
+
+
+        // 行数据换颜色
+        function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+            try {
+                var div = document.getElementById(DivId);
+                if (div != null) //找到对象了
+                {
+                    var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                    if (trs != null && trs.length > 0) {
+                        trs[RowIndex].style.color = Color;//字体颜色 
+                    }
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+        }
+
+        /* 渲染表格 */
+        var insTb = table.render({
+            elem: '#tbBasicTable',
+            id: 'Reload',
+            url: setter.djangoAPI + "followStock/?word_or_name=",
+            where: {
+                'token': setter.getToken(), 'field': '',
+                'order': '',
+                TrdEnv:setter.TrdEnv
+            },
+            page: true,
+            sort: true,
+            autoSort: false,
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'checkbox'},
+                {field: 'class', title: '类型', align: 'left', sort: true},
+                {field: 'code', title: '代码', align: 'left'},
+                {field: 'stock_name', title: '名称', align: 'left'},
+                {
+                    field: 'keyword', title: '关键词', align: 'left', templet: function (d) {
+                        let content = '<div class="layui-badge-list">'
+                        let keyword = d.keyword.split(',')
+                        for (let i in keyword) {
+                            content += '<span class="layui-badge layui-badge-gray">' + keyword[i] + '</span>'
+                        }
+                        content = content + '<i class="layui-icon layui-icon-tips" lay-event="addkey"></i></div>'
+                        return content;
+                    }
+                },
+                {field: 'update_time', title: '更新时间', align: 'left'},
+                {field: 'last_price', title: '价格', align: 'left', sort: true},
+                {field: 'change', title: "涨跌额", align: 'left', sort: true},
+                {
+                    field: 'change_rate', title: '涨跌幅', align: 'left', sort: true, templet: function (d) {
+                        return d.change_rate + '%';
+                    }
+                },
+                {field: 'high_price', title: '最高价', align: 'left', sort: true},
+                {field: 'low_price', title: '最低价', align: 'left', sort: true},
+                {field: 'prev_close_price', title: '昨日收盘价', align: 'left', sort: true},
+                {
+                    field: 'total_market_val', title: '市值(亿)', align: 'left', templet: function (d) {
+                        return d.total_market_val.slice(0, -2);
+                    }
+                },
+                {title: '交易', toolbar: "#transactionButtons", align: 'left'},
+                {title: '期权', toolbar: "#shareOptions", align: 'left'},
+                {title: '日k', toolbar: "#dayButtons", align: "left"},
+
+            ]],
+            done: function (res, curr, count) {
+                persons = res.data
+                for (var i = 0; i < persons.length; i++) {
+                    if (persons[i].change_rate > 0)
+                        Layui_SetDataTableRowColor('tbBasicTable', i, '#f54545');
+                    else
+                        Layui_SetDataTableRowColor('tbBasicTable', i, '#0f990f');
+                }
+            }
+        });
+
+        /* 表格搜索 */
+        form.on('submit(tbBasicTbSearch)', function (data) {
+            data.field.TrdEnv=setter.TrdEnv;
+            insTb.reload({
+                // page: false,
+                // limit: false,
+                url: setter.djangoAPI + "followStock/?word_or_name=&token=" + setter.getToken(),
+                where: data.field,
+
+            });
+            return false;
+        });
+
+
+        // 排序工具 改为监听，并reload table
+        table.on('sort(tbBasicTable)', function (obj) {
+            table.reload('Reload', {
+                initSort: obj,
+                where: {
+                    field: obj.field //排序字段   在接口作为参数字段  field order
+                    , order: obj.type //排序方式   在接口作为参数字段  field order}
+                }
+            });
+            return false;
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(tbBasicTable)', function (obj) {
+            data = obj.data; // 获得当前行数据 glob data
+            if (obj.event === 'trade') { // 交易
+
+                index.go('data/order')
+            } else if (obj.event === 'share') { // 期权
+                index.go('data/share_option');
+            } else if (obj.event === 'kLine') { // 日k
+                index.go('kLine/k_line');
+            } else if (obj.event === 'addkey') { //添加关键词
+                console.log('添加关键词')
+                let post_code = [];
+                layer.open({
+                    title: "添加关键词",
+                    area: ["400px", "150px"],
+                    // offset: 'auto',
+                    btn: ['保存', '取消'],
+                    offset: ['40%', "40%"], shade: false,
+                    content: $('#keywordOpen').html(), type: 1,
+                    success: function (layero, dIndex) {
+                        // 无边框样式
+                        let notification_input = $('#keyinputshow')
+
+                        // 加载缓存
+                        let keyWordList = obj.data.keyword;
+                        notification_input.val(keyWordList)
+                        keyWordList = keyWordList.split(',')
+                        console.log(keyWordList)
+
+                        for (let i in keyWordList) {
+                            post_code.push(keyWordList[i])
+                        }
+
+                        // notification_input.tagsInput({skin: 'tagsinput-default'});
+                        let tagAdd = function (tag) {
+                            console.log('点击添加')
+                            $('#demoTagsInput2_addTag').css('margin-top', "10px");
+                            post_code.push(tag);
+
+                        }
+                        let tagRemove = function (tag) {
+                            console.log('点击删除')
+                            let index = post_code.indexOf(tag);
+                            if (index !== -1) post_code.splice(index, 1);
+                        }
+                        notification_input.tagsInput({
+
+                            removeWithBackspace: true,
+                            onAddTag: tagAdd,
+                            onRemoveTag: tagRemove
+                        });
+                        console.log(notification_input.tagsInput.onAddTag)
+                    },
+                    yes: function (index, layero) {
+                        let form_data = {};
+                        form_data.code = obj.data.code;
+                        form_data.keyword = post_code.join(',');
+                        form_data.token = setter.getToken()
+                        form_data.TrdEnv=setter.TrdEnv
+                        admin.req(setter.djangoAPI + "stockKeywordModify/", form_data, function (r) {
+                            layer.msg("修改成功", {icon: 1});
+
+                        }, 'post');
+                        table.reload('Reload');
+                        layer.close(index);
+                    },
+                });
+            }
+            ;
+            dropdown.hideAll();
+        });
+        //delete row
+        $('#deleteCode').click(function () {
+                let checkRows = table.checkStatus('Reload');
+                console.log(checkRows);
+                if (checkRows.data.length === 0) {
+                    layer.msg("请选择要删除的数据", {icon: 2});
+                } else {
+                    layer.confirm("确定要删除选中的数据吗？",
+                        {title: ["信息", "background:black;color:white;"], btn: ['yes', 'no']}, function (index) {
+                            let data_list = checkRows.data;
+                            let code_list = [];
+                            $.each(data_list, function (index, data) {
+                                code_list.push(data.code);
+                            })
+                            admin.req(setter.djangoAPI + "delFollowStock/", {
+                                codeList: JSON.stringify(code_list),
+                                'token': setter.getToken(),
+                                TrdEnv:setter.TrdEnv
+                            }, function (res) {
+                                if (res.code === 0) {
+                                    table.reload("Reload");
+                                    layer.close(index);
+                                    layer.msg("成功删除", {icon: 1});
+                                } else {
+                                    layer.close(index);
+                                    layer.msg("删除失败");
+                                }
+                            }, "post")
+
+                        })
+                }
+
+            }
+        )
+
+        $('#addStockCode').click(function () {
+            let input_code = $('#searchInputCode').val();
+            let post_code = [];
+            let setting_prompt = {
+                title: '添加代码',
+                area: ['800px', '350px'], content: $('.additionRow'),
+                btn: ["确定添加", "取消"],
+                yes: function (index, layero) {
+                    // JSON.stringify(post_data)
+                    admin.btnLoading(".layui-layer-btn0");
+                    admin.req(setter.djangoAPI + 'addFollowStock/', {
+                        'data': JSON.stringify(post_code),
+                        'token': setter.getToken(),
+                        TrdEnv:setter.TrdEnv
+                    }, function (r) {
+                        if (r.code === 0) {
+                            admin.btnLoading(".layui-layer-btn0", false);
+                            layer.msg(r.msg, {icon: 1, time: 1500, shade: 0.4}, function () {
+                                window.location.reload()
+                            });
+
+                        } else layer.msg("添加失败", {icon: 2});
+                        layer.close(index);
+                    }, "post");
+
+
+                },
+                success: function (layero, index) {
+                    let notification_input = layero.find('#codeInput');
+
+                    let tagAdd = function (tag) {
+                        $('#codeInput_tagsinput').show();
+                        $('#realInput').css('margin-top', "10px");
+                        post_code.push(tag);
+                        $("#codeInput_tagsinput").append(input);
+
+                    }
+                    let tagRemove = function (tag) {
+                        let index = post_code.indexOf(tag);
+                        if (index !== -1) post_code.splice(index, 1);
+                    }
+
+                    notification_input.tagsInput({
+                        removeWithBackspace: true,
+                        interactive: false,
+                        onAddTag: tagAdd,
+                        onRemoveTag: tagRemove
+                    });
+                    // let input = layero.find('#codeInput_tag');
+                    let input = layero.find('#realInput');
+                    $('#realMenu').append(input);
+                    $('#codeInput_tagsinput').hide();
+                    $("#codeInput_tagsinput").css('width', "400px")
+
+                    let code_list = $('#stockNotificationList');
+
+                    code_list.hide();
+                    input.bind('input output', function () {
+                        let value = this.value;
+                        let that = this;
+
+                        admin.req(setter.djangoAPI + 'searchStock/', {
+                            word_or_name: value, limit: 15,
+                            page: 1,
+                            TrdEnv:setter.TrdEnv,
+                            token:setter.getToken()
+                        }, function (res) {
+                            let code = res.code;
+                            if (code === 0) {
+                                let data = res.data;
+
+                                code_list.empty();
+                                for (let i = 0; i < data.length; i++) {
+                                    let li = $('<li><a>' + data[i][0] + data[i][1] + '</a></li>');
+                                    li.click(function (e) {
+                                        that.value = "";
+                                        // input.val(data[i][0] + '  ' + data[i][1]);
+                                        notification_input.addTag(data[i][0] + '   ' + data[i][1]);
+                                        code_list.hide();
+                                        $('.layui-layer-prompt').css('height', "");
+                                        $(".layui-layer-content").css('height', "");
+                                    })
+                                    code_list.append(li);
+                                }
+                                code_list.show();
+                                $('.layui-layer-prompt').css('height', "700px");
+                                $(".layui-layer-content").css('height', "80%");
+                            }
+                        })
+
+                    })
+
+                    // input.val(input_code);
+
+
+                }
+            }
+            let index = layer.prompt(setting_prompt);
+
+        })
+
+
+        // 导出excel
+        $('#tbBasicExportBtn').click(function () {
+            var checkRows = table.checkStatus('Reload');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                table.exportFile(insTb.config.id, checkRows.data, 'xls');
+            }
+        });
+
+        // input code name for query
+        let $repeat = 0; // modify time
+        let $timeout = undefined;
+        // listen search input code event
+        $('#searchInputCode').bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        })
+
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'searchStock/', {
+                word_or_name: value, limit: 15,
+                page: 1,
+                TrdEnv:setter.TrdEnv,
+                token:setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('.dropdown-menu')
+                    $('#searchCodeList').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0] + '  ' + data[i][1];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('#searchCodeList').append(li);
+                    }
+                }
+            })
+
+        }
+
+        $('#searchInputCode').bind("click", function () {
+            get_search_stock_name(this);
+
+        })
+    });
+</script>

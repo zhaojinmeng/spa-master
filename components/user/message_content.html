@@ -1,0 +1,271 @@
+<!--web page-->
+<style type="text/css">
+
+    .ew-cascader-input {
+        width: 400px;
+    }
+</style>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+
+            <ul class="layui-tab-title">
+                <li class="layui-this">消息管理</li>
+            </ul>
+            <div class="layui-inline">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">时间：</label>
+                    <div class="layui-input-block">
+                        <input type="text" class="layui-input" name='date' id="dateChange"
+                               autocomplete="off"
+                               placeholder="选择日期"/>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">模块：</label>
+                    <div class="layui-input-block">
+                        <input id="demoCascader10" placeholder="请选择" class="layui-hide ew-cascader-hide"
+                               lay-vertype="tips" required="" style="width:300px;" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-form-item text-center">
+                    <button class="layui-btn icon-btn" lay-filter="demoCascaderformSub" lay-submit="">
+                        <i class="layui-icon"></i>查询
+                    </button>
+                </div>
+            </div>
+            </form>
+
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="eMessageTable" lay-filter="eMessageTable"></table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--result template-->
+<script type="text/html" id="successTemplate">
+    {{# if(d.success == 0){ }}
+
+    <span class="text-success" lay-event="pushLog">成功
+        <i class="layui-icon layui-icon-tips"></i> </span>
+    {{# } else {  }}
+    <span class="text-danger" lay-event="pushLog">失败
+    <i class="layui-icon layui-icon-tips" style="color: red;"></i></span>
+    {{#  } }}
+</script>
+<!--status template-->
+<script type="text/html" id="statusTemplate">
+    {{#
+    const read_number = d.status[0];
+    const all_number = d.status[1];
+    return '<span class="layui-text">'+read_number+'/'+all_number+'</span>'
+    }}
+</script>
+<!--time line template for message dialog-->
+<script type="text/html" id="messageDialog">
+    <div style="padding: 25px 0 0 30px;">
+        <ul class="layui-timeline">
+            <li class="layui-timeline-item">
+                <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                <div class="layui-timeline-content layui-text">
+                    <div class="layui-timeline-title">
+                        <h3 class="inline-block">曲丽丽</h3>&emsp;2019-06-03 13:29
+                    </div>
+                    <p>提交了外出申请</p>
+                </div>
+            </li>
+            <li class="layui-timeline-item">
+                <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                <div class="layui-timeline-content layui-text">
+                    <div class="layui-timeline-title">
+                        <h3 class="inline-block">
+                            林东东&nbsp;<span class="layui-badge layui-bg-green">组长</span>
+                        </h3>&emsp;2019-06-03 13:48
+                    </div>
+                    <p>同意了申请（速去速回！）</p>
+                </div>
+            </li>
+            <li class="layui-timeline-item">
+                <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                <div class="layui-timeline-content layui-text">
+                    <div class="layui-timeline-title">
+                        <h3 class="inline-block">
+                            周星星&nbsp;<span class="layui-badge layui-bg-blue">经理</span>
+                        </h3>&emsp;2019-06-03 13:48
+                    </div>
+                    <p>同意了申请</p>
+                </div>
+            </li>
+            <li class="layui-timeline-item">
+                <i class="layui-icon layui-timeline-axis">&#xe63f;</i>
+                <div class="layui-timeline-content layui-text">
+                    <div class="layui-timeline-title">
+                        <h3 class="inline-block">
+                            付小小&nbsp;<span class="layui-badge layui-bg-orange">人事</span>
+                        </h3>&emsp;2019-06-03 13:48
+                    </div>
+                    <p>同意了申请</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+</script>
+
+<!--js for this page-->
+<script>
+    layui.use(['layer', 'form', 'table', 'element', 'laytpl', 'tree', 'setter', 'cascader', 'laydate'], function () {
+        //  load models
+        const table = layui.table;
+        const $ = layui.jquery;
+        const admin = layui.admin;
+        const form = layui.form;
+        const tree = layui.tree;
+        const laytpl = layui.laytpl;
+        let date = layui.laydate;
+        const setter = layui.setter;
+        var cascader = layui.cascader;
+        setter.baseServer = '';
+
+        date.render({
+            elem: '#dateChange',
+            value: new Date()
+        })
+
+        var data10 = [{
+            value: '信息模块',
+            label: '信息模块',
+            children: [
+                {
+                    value: '登录',
+                    label: '登录'
+                },
+                {
+                    value: '电报监控',
+                    label: '电报监控'
+                },
+                {
+                    value: '异动监控',
+                    label: '异动监控'
+                }
+            ]
+        }, {
+            value: '条件下单',
+            label: '条件下单',
+            children: [
+                {
+                    value: '创建成功',
+                    label: '创建成功'
+                },
+                {
+                    value: '满足条件下单成功',
+                    label: '满足条件下单成功'
+                },
+                {
+                    value: '未完全满足过期失效',
+                    label: '未完全满足过期失效'
+                },
+                {
+                    value: '执行成功',
+                    label: '执行成功'
+                },
+                {
+                    value: '下单失败',
+                    label: '下单失败'
+                }
+            ]
+        }, {
+            value: '订单模块',
+            label: '订单模块',
+            children: [
+                {
+                    value: '全部已成',
+                    label: '全部已成'
+                },
+                {
+                    value: '部分成交',
+                    label: '部分成交'
+                },
+                {
+                    value: '全部已撤单',
+                    label: '全部已撤单'
+                },
+                {
+                    value: '改单',
+                    label: '改单'
+                }
+            ]
+        },];
+
+        // 表单验证
+        cascader.render({
+            elem: '#demoCascader10',
+            id: 'Reload_1',
+            data: data10,
+            changeOnSelect: true,
+        });
+
+
+        form.on('submit(demoCascaderformSub)', function (data) {
+            let model = $('#demoCascader10').val().replace(',', '-');
+            let date = $('#dateChange').val()
+            console.log(model, date)
+            message_table_config.where.model = model;
+            message_table_config.where.date = date;
+            table.render(message_table_config);
+            return false;
+        });
+
+        // columns setting
+        const message_manager_col = [[
+            {type: 'numbers', title: 'id'},
+            {field: 'pushtime', title: '推送时间', width: '180', align: 'left'},
+            {field: 'model', title: '所属模块', width: '20%', align: 'left'},
+            {field: 'msg', title: '消息内容', width: '60%', align: 'left'},
+            {field: 'pushres', title: '推送结果', width: '100', align: 'left'},
+            //@todo lack of template
+
+            {field: 'state', title: '状态', width: '80', align: 'left'},
+        ]]
+        // simulate data
+        const message_table_config = {
+            elem: '#eMessageTable',
+            id: 'Reload',
+            url: setter.djangoAPI + 'getMsgLog/',
+            where: {'token': setter.getToken(), 'model': '', 'date': '',TrdEnv:setter.TrdEnv},
+            page: true,
+            size: 1,
+            limit: 10,
+            // cellMinWidth: 100,
+            cols: message_manager_col
+        }
+        table.render(message_table_config);
+        // modify user dialog and event
+        table.on('tool(eMessageTable)', function (obj) {
+
+            const data = obj.data;
+            open_message_log_window(data);
+        })
+
+        // layer message dialog
+        function open_message_log_window(d) {
+            laytpl(messageDialog.innerHTML).render(d, function (html) {
+                admin.open(
+                    {
+                        type: 1,
+                        title: '消息记录',
+                        content: html
+                    }
+                );
+            })
+        }
+    })
+
+</script>

@@ -1,0 +1,149 @@
+[
+  {
+    "name": "股票",
+    "icon": "layui-icon layui-icon-rmb",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "关注的",
+        "url": "#/data/table_stock_data"
+      },
+      {
+        "name": "持仓的",
+        "url": "#/data/take_position"
+      },
+      {
+        "name": "交易明细",
+        "url": "#/data/trade_details"
+      },
+      {
+        "name": "下单",
+        "url": "#/data/order"
+      }
+    ]
+  },
+  {
+    "name": "数据",
+    "icon": "layui-icon layui-icon-list",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "日k",
+        "url": "#/kLine/k_line"
+      },
+      {
+        "name": "分k",
+        "url": "#/kLine/mink_line"
+      },
+      {
+        "name": "期权列表",
+        "url": "#/data/share_option"
+      },
+      {
+        "name": "分时对照",
+        "url": "#/data/comparison"
+      },
+      {
+        "name": "逐笔明细",
+        "url": "#/kLine/ticker"
+      }
+    ]
+  },
+  {
+    "name": "行情",
+    "icon": "layui-icon layui-icon-chart",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "涨跌周期对照",
+        "url": "#/market/cycle_udp"
+      },
+      {
+        "name": "市场行情",
+        "url": "#/market/market"
+      },
+      {
+        "name": "电报",
+        "url": "#/market/telegram"
+      },
+      {
+        "name": "个股",
+        "url": "#/market/personalizeStock"
+      },
+      {
+        "name": "事件",
+        "url": "#/market/event"
+      },
+      {
+        "name": "评论",
+        "url": "#/market/comment"
+      }
+    ]
+  },
+  {
+    "name": "板块数据",
+    "icon": "layui-icon layui-icon-list",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "沪港通",
+        "url": "#/plateData/plateIndex"
+      },
+      {
+        "name": "板块分时对照",
+        "url": "#/plateData/comparisonIndex"
+      }
+    ]
+  },
+  {
+    "name": "异动配置",
+    "icon": "layui-icon layui-icon-set-sm",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "异动设置",
+        "url": "#/abnormal/abnormal_index"
+      }
+    ]
+  },
+  {
+    "name": "条件",
+    "icon": "layui-icon layui-icon-file-b",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "我的条件",
+        "url": "#/condition/condition"
+      }
+    ]
+  },
+  {
+    "name": "权限和推送",
+    "icon": "layui-icon layui-icon-set-sm",
+    "url": "javascript:;",
+    "subMenus": [
+      {
+        "name": "用户管理",
+        "url": "#/user/user_table"
+      },
+      {
+        "name": "消息内容",
+        "url": "#user/message_content"
+      },
+      {
+        "name": "消息模块",
+        "url": "#user/message_model"
+      },
+      {
+        "name": "用户日记",
+        "url": "#user/users_log"
+      },
+
+    ]
+  },
+  {
+    "name": "路由传参",
+    "url": "#/example/router-param",
+    "show": false
+  }
+]

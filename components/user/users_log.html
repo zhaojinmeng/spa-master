@@ -1,0 +1,118 @@
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="userLogTable" lay-filter="userLogTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--user operation class-->
+<script id="userOperationClass" type="text/html">
+    {{#
+    const user_operation_class = [
+    '<span class="text-info">登录</span>','<span class="text-info">访问</span>',
+    '<span class="text-warning">修改</span>','<span class="text-warning">添加</span>',
+    '<span class="text-danger">删除</span>'];
+    return user_operation_class[d.operation];
+    }}
+</script>
+<!--table operation-->
+<script id="tableOperation" type="text/html">
+    <form class="layui-form toolbar table-tool-mini">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label w-auto">日期:</label>
+                <div class="layui-input-inline">
+                    <input name="dateSearch" id="dateSearch" class="layui-input" type="text" autocomplete="off"
+                           placeholder="选择日期"/>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label w-auto">类型:</label>
+                <div class="layui-input-inline">
+                    <select name="className" lay-verType="message" required>
+                        <option value="">选择类型</option>
+                        <option value="登录">登录</option>
+                        <option value="访问">访问</option>
+                        <option value="修改">修改</option>
+                        <option value="添加">添加</option>
+                        <option value="删除">删除</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline" style="padding-right: 110px;">
+                <button class="layui-btn icon-btn" lay-filter="tbBasicTbSearch" lay-submit>
+                    <i class="layui-icon">&#xe615;</i>搜索
+                </button>
+            </div>
+
+        </div>
+    </form>
+
+</script>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'dropdown', "tagsInput", 'laydate', 'setter'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var date = layui.laydate;
+        var util = layui.util;
+        var dropdown = layui.dropdown;
+        let tagsInput = layui.tagsInput;
+        let setter = layui.setter;
+        setter.baseServer = '';
+
+        form.render();
+
+        //render date
+        const date_input = date.render({
+            elem: '#dateSearch',
+            value: new Date()
+        })
+
+        // model input hint
+        const user_table_columns = [[
+            {type: 'numbers', title: 'id'},
+            {field: 'username', title: '用户', align: 'left'},
+            {field: 'log_type', title: "类型", align: 'left',},  // templet: "#userOperationClass"
+            {field: 'model', title: "模块", align: 'left'},
+            {field: 'logtime', title: '操作时间', align: 'left', sort: true},
+            {field: 'detail', title: '详情', align: 'left'}
+        ]]
+        // simulate data
+        const user_log_config = {
+            elem: '#userLogTable',
+            page: true,
+            size: 2,
+            url: setter.djangoAPI + 'getUserLog/?token=' + setter.getToken() + '&TrdEnv=' + setter.TrdEnv,
+            where: {'className': '', 'dateSearch': '', TrdEnv: setter.TrdEnv},
+            cellMinWidth: 100,
+            toolbar: '#tableOperation',
+            cols: user_table_columns,
+            done: function (e) {
+                date.render({
+                    elem: '#dateSearch'
+                })
+            }
+        }
+
+        let data_instance = table.render(user_log_config)
+
+
+        form.on('submit(tbBasicTbSearch)', function (data) {
+            console.log(data.field);
+            data_instance.reload({where: data.field, page: {curr: 1}});
+            // date_input.reload();
+            return false;
+        })
+
+        // render table
+
+    })
+</script>

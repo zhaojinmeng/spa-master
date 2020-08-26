@@ -1,0 +1,1092 @@
+<!--css-->
+<style>
+    /** 文章列表样式 */
+    .article-list-item {
+        border-bottom: 1px solid #e8e8e8;
+        margin-top: 16px;
+        position: relative;
+    }
+
+    .article-list-item > h2 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 12px;
+    }
+
+    .article-list-item > .layui-badge-rim {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .article-list-item .layui-badge-list .layui-badge {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .article-list-item .article-list-item-text {
+        margin-bottom: 12px;
+        word-wrap: break-word;
+        word-break: break-all;
+    }
+
+    .article-list-item .article-list-item-desc {
+        margin-bottom: 12px;
+    }
+
+    .article-list-item .article-list-item-desc .head {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+
+    .article-list-item .article-list-item-desc > * {
+        vertical-align: middle;
+    }
+
+    .article-list-item .article-list-item-tool {
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item {
+        border-right: 1px solid #e8e8e8;
+        padding: 0 15px;
+        cursor: pointer;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item:first-child {
+        padding-left: 0;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item:last-child {
+        border-right: none;
+        padding-right: 0;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item > * {
+        vertical-align: middle;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item.star-active {
+        color: #01AAED;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item.star-active .layui-icon-rate:before {
+        content: "\e67a";
+    }
+
+    .item-back {
+        background-color: lightgrey;
+    }
+
+    /** // 文章列表样式结束 */
+</style>
+
+<!--content-->
+<div class="layui-fluid">
+
+    <div class="layui-card">
+        <!--toolbar for table-->
+        <div class="layui-card-body">
+            <form class="layui-form">
+
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">股票选择:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" id="newsEventMenu">
+                                <input name="code" id="newsEventInput" lay-verType="message"
+                                       lay- class="layui-input" placholder="请输入股票代码" type="text"
+                                       autocomplete="off"
+                                       required>
+                                <ul class="dropdown-menu-nav" id="newsEventCodeSelect">
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">发生时间:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="dateChange1" class="layui-input" id="dateChange1"
+                                   autocomplete="off">
+                        </div>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name="dateChange2" id="dateChange2"
+                                   autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">详情:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="text" class="layui-input" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="eSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                        <button class="layui-btn icon-btn" id="addEvent" type="button">
+                            <i class="layui-icon">&#xe654;</i>添加
+                        </button>
+                    </div>
+
+
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="lyui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">事件列表</li>
+
+            </ul>
+            <div class="layui-tab-content">
+
+                <div class="layui-tab-item layui-show">
+                    <table id="eEventsTable"
+                           class="layui-row" style="width: 100%"></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!--table card-->
+<script type="text/html" id="eventCard">
+    <div class="article-list-item item" style="width: 100%">
+
+        <h2>{{d.e_name}}</h2>
+        <div class="layui-badge-list">
+            <span class="layui-badge layui-badge-gray">{{d.name}}</span>
+
+        </div>
+        <div class="article-list-item-text layui-text">
+            {{d.detail}}
+        </div>
+        <div>
+            <span class="layui-badge-rim">{{d.pubdate}}</span>
+        </div>
+        <br/>
+        <div class="article-list-item-tool">
+            <span class="article-list-item-tool-item " lay-event="like"> <i class="layui-icon layui-icon-edit"></i>&nbsp;
+                <span> <button class="layui-btn layui-btn-xs layui-btn-primary" style="border: none;" id="itemRedact"
+                               lay-event="redact">编辑</button></span>
+            </span>
+            <span class="article-list-item-tool-item" lay-event="comment"> <i class="layui-icon layui-icon-delete"></i>&nbsp; <span>
+                 <button class="layui-btn layui-btn-xs layui-btn-primary" style="border: none;" id="itemDelete"
+                         lay-event="delete">删除</button>
+            </span> </span>
+        </div>
+
+    </div>
+</script>
+
+<!--table modify dialog-->
+<script id="eDialogPrimary" type="text/html">
+    <form id="eEventEditForm" lay-filter="eEventEditForm"
+          class="layui-form model-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">事件名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="eventName" id="eventName"
+                       class="layui-input" placeholder="请输入事件名"/>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">股票代码</label>
+            <div class="layui-input-block">
+
+                <select class="layui-input" id="selectCode" name="select_code" lay-filter="selectCode" lay-search>
+                    <option value="">请选择或者输入股票代码</option>
+                </select>
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">详情</label>
+            <div class="layui-input-block">
+
+                <textarea name="eventDetails" id="eventDetails" class="layui-textarea"></textarea>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">
+                发生时间
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="ed" name="ed" placeholder="结束时间">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                个股新闻
+            </label>
+            <div class="layui-input-block">
+                <table id="formNewsTable" lay-filter="formNewsTable"></table>
+            </div>
+            <button class="layui-btn layui-btn-sm icon-btn" id="eAddBtnNew"
+                    style="position: absolute; left: 20px;top: 340px;padding: 0 5px;">
+                <i class="layui-icon">&#xe654;</i>添加
+            </button>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                财联社电报
+            </label>
+            <div class="layui-input-block">
+                <table id="formTelegramTable" lay-filter="formTelegramTable"></table>
+            </div>
+            <button class="layui-btn layui-btn-sm icon-btn" id="eAddBtnTelegram"
+                    style="position: absolute;left: 20px;top: 570px;padding: 0 5px;">
+                <i class="layui-icon">&#xe654;</i>添加
+            </button>
+        </div>
+        <div class="layui-form-item text-right">
+
+            <button class="layui-btn" ew-event="closeDialog" id="eCancelButton">取消</button>
+            <button class="layui-btn" type="submit" lay-submit lay-filter="mainFormSubmit">保存</button>
+        </div>
+
+    </form>
+
+</script>
+
+<!--title child dialog-->
+<script type="text/html" id="eNewsChildDialog">
+    <form id="newsChildForm" class="layui-form model-form" lay-filter="eNewsChildDialogForm">
+        <input type="hidden" name="nToken">
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">
+                选择新闻事件:
+            </label>
+            <div class="layui-input-block" style="width: 450px">
+                <select class="layui-input" lay-serach name="title" type="text"
+                        lay-verify="required" id="newsSelect" required lay-filter="newsSelect"
+                        lay-search>
+                    <option value="">请选择新闻事件</option>
+                    <input name="url" type="hidden" id="newsLink">
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" id="newsCancelForm">取消</button>
+            <button class="layui-btn" type="submit" lay-submit lay-filter="newsAddButton">保存</button>
+        </div>
+    </form>
+</script>
+<!--telegram child dialog-->
+<script type="text/html" id="eTelegramChildDialog">
+    <form id="telegramChildForm" class="layui-form model-form" lay-filter="eTelegramChildDialog">
+        <table id="telegramTable" lay-filter="telegramTable"></table>
+        <!--        <input type='hidden' name="tToken">-->
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label layui-form-required">事件标题:</label>-->
+        <!--            <div class="layui-input-block">-->
+        <!--                <input name="title" id="eventTitle" type="text" class="layui-input layui-input-inline"-->
+        <!--                       lay-verType="message"-->
+        <!--                       lay-verify="required" required>-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label layui-form-required">事件正文</label>-->
+        <!--            <div class="layui-input-block">-->
+        <!--                <textarea name="content" id="eventContent"-->
+        <!--                          lay-verify="required" required class="layui-textarea">-->
+
+        <!--                </textarea>-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label layui-form-required">事件类型</label>-->
+        <!--            <div class="layui-input-block">-->
+        <!--                <input name="classes" type="checkbox"-->
+        <!--                       lay-verify="required" required value="0" title="类型1">-->
+        <!--                <input name="classes" type="checkbox"-->
+        <!--                       lay-verify="required" required value="1" title="类型2">-->
+        <!--                <input name="classes" type="checkbox"-->
+        <!--                       lay-verify="required" required value="2" title="类型3">-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" id="telegramCancelForm">取消</button>
+            <button class="layui-btn" lay-filter="eTelegramSubmit" lay-submit>保存</button>
+        </div>
+    </form>
+
+</script>
+
+<!--GirdCard Item-->
+<script type="text/html" id="articleCard">
+    <div class="article-list-item item">
+        <h2>{{d.title}}</h2>
+        <span class="layui-badge-rim">{{d.createTime}}</span>
+        <div class="layui-badge-list">
+            <span class="layui-badge layui-badge-gray">分类1</span>
+        </div>
+        <div class="article-list-item-text layui-text">
+            {{d.data}}
+        </div>
+        <div class="article-list-item-desc layui-text">
+            <img src="{{d.head}}" class="head">
+            <a href="javascript:;" class="name">{{d.name}}</a>
+            发布在该链接地址<a href="javascript:;">https://www.baidu.com</a>
+        </div>
+        <div class="article-list-item-tool">
+            <span class="article-list-item-tool-item
+            {{d.isStar?'start-active':''}}" lay-event="'star">
+                <i class="layui-icon layui-icon-rate"></i>
+                <span>{{d.star}}</span>
+            </span>
+            <span class="article-list-item-tool-item {{d.isLike?'star-active':''}}" lay-event="like">
+                <i class="layui-icon layui-icon-praise"></i>&nbsp;
+                <span>{{d.like}}</span>
+            </span>
+            <span class="article-list-item-tool-item" lay-event="comment">
+                <i class="layui-icon layui-icon-dialogue"></i>&nbsp;
+                <span>{{d.comment}}</span>
+            </span>
+
+        </div>
+    </div>
+</script>
+
+<!--bar of button-->
+<script type="text/html" id="newsOperationBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!--This is only delete button-->
+<script type="text/html" id="deleteOperationBar">
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<!--js-->
+<script type="text/javascript">
+    function getPreMonth(nowdate) {
+        nowdate.setMonth(nowdate.getMonth() - 1);
+        var y = nowdate.getFullYear();
+        var m = nowdate.getMonth() + 1;
+        m = m < 10 ? '0' + m : m
+        var d = nowdate.getDate();
+        d = d < 10 ? '0' + d : d
+        var formatwdate = y + '-' + m + '-' + d;
+        return formatwdate;
+    }
+
+    layui.use(['layer', 'form', 'dataGrid', 'table', 'util', 'formX', 'laydate', 'admin', 'setter', 'dropdown'], function () {
+            let $ = layui.jquery;
+            let layer = layui.layer;
+            let form = layui.form;
+            let dataGrid = layui.dataGrid;
+            let table = layui.table
+            let util = layui.util;
+            let admin = layui.admin;
+            let date = layui.laydate;
+            let setter = layui.setter;
+            let formX = layui.formX;
+            setter.baseServer = '';
+
+
+            // render event
+            form.render();
+            // date config
+            let date_config = {
+                elem: '#dateChange1',
+                value: getPreMonth(new Date())
+
+            }
+            let time_config = {
+                elem: '#dateChange2',
+                value: new Date()
+            }
+            date.render(date_config);
+            date.render(time_config);
+
+            let dialog_time_config = {
+                elem: "#ed",
+                trigger: "click",
+                value: new Date()
+            }
+
+            // 行数据换颜色
+            function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+                try {
+                    var div = document.getElementById(DivId);
+                    if (div != null) //找到对象了
+                    {
+                        var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                        if (trs != null && trs.length > 0) {
+                            trs[RowIndex].style.color = Color;//字体颜色 
+                        }
+                    }
+                } catch (e) {
+                    console.log(e.message);
+                }
+            }
+
+            // dataGrid config
+            let event_table_setting = {
+                elem: '#eEventsTable',
+                page: true,
+                cellMinWidth: 100,
+                url: setter.djangoAPI + 'getNewsEvent/?limit=10&page=1&sd=&ed=&text=&code=',
+                where: {'token': setter.getToken(), TrdEnv: setter.TrdEnv},
+                templet: '#eventCard',
+                done: function (res, curr, count) {
+                    addMouseEvent();
+                    persons = res
+                    for (var i = 0; i < persons.length; i++) {
+                        console.log(persons[i].ctime.length < 9)
+                        if (persons[i].ctime.length < 9) {
+                            var trs = $(".layui-badge-rim")[i];
+                            trs.style.color = '#f54545'
+                        }
+                    }
+                }
+            }
+
+            // 前后3天的date
+            function get3day(DATE, addsub) {
+                nowdate = new Date(DATE)
+                if (addsub === '+') {
+                    nowdate.setDate(nowdate.getDate() + 3);
+                    var y = nowdate.getFullYear();
+                    var m = nowdate.getMonth() + 1;
+                    m = m < 10 ? '0' + m : m
+                    var d = nowdate.getDate();
+                    d = d < 10 ? '0' + d : d
+                    var formatwdate = y + '-' + m + '-' + d;
+                } else {
+                    nowdate.setDate(nowdate.getDate() - 3);
+                    var y = nowdate.getFullYear();
+                    var m = nowdate.getMonth() + 1;
+                    m = m < 10 ? '0' + m : m
+                    var d = nowdate.getDate();
+                    d = d < 10 ? '0' + d : d
+                    var formatwdate = y + '-' + m + '-' + d;
+                }
+
+
+                return formatwdate;
+            }
+
+
+            dataGrid.render(event_table_setting);
+
+            // click event of data grid.
+            dataGrid.on("tool(eEventsTable)", function (obj) {
+                const event = obj.event;
+                switch (event) {
+                    case "delete":
+                        let postData = {}
+                        postData.e_name = obj.data.e_name
+                        postData.token = setter.getToken()
+                        postData.TrdEnv = setter.TrdEnv
+
+                        $.post(setter.djangoAPI + "deleteNewsEvent/", postData, function (res) {
+                            if (res.code === 0) {
+                                layer.msg(res.msg, {icon: 1});
+                                dataGrid.render(event_table_setting);
+                            }
+                        }, 'json')
+                        break
+                    case "redact":
+                        const data = obj.data;
+                        data.eventName = data.e_name;
+                        data.eventDetails = data.detail;
+                        data.selectCode = data.code;
+                        data.ed = data.pubdate.slice(0, 10);
+
+                        showEditModel(data);
+
+                }
+            })
+
+            // mouse enter div event to modify background color....
+            function addMouseEvent() {
+                // $('.item').mouseenter(function (e) {
+                //     $(this).addClass('item-back')
+                // });
+
+                $('.item').click(function (e) {
+                    if (e.target.tagName === "BUTTON") return true;
+                    $(this).find('#cardItem').prop('checked')
+                        ? $(this).find('#cardItem').prop('checked', false)
+                        : $(this).find('#cardItem').prop('checked', true)
+
+                })
+
+                $('.article-list-item').mouseleave(function (e) {
+                    $(this).removeClass('item-back')
+                });
+            }
+
+
+            // form dialog
+            function showEditModel(expTpe) {
+
+                admin.open({
+                    type: 1,
+
+                    area: '700px',
+                    title: (expTpe ? '修改' : '添加') + '事件',
+                    content: $('#eDialogPrimary').html(),
+                    success: function (layero, index) {
+                        const newsList = [];
+                        const telegramList = [];
+
+                        // title dialog is  in the edit window  that has  successfully. opened.
+                        let newsTableConfig = {
+                            elem: '#formNewsTable',
+                            data: newsList,
+                            page: true,
+                            height: '200px',
+                            limit: 2,
+                            cols: [[
+                                {type: 'numbers'},
+                                {field: 'title', title: '项目名称'},
+                                {
+                                    field: 'createTime', title: '连接', templet: function (d) {
+                                        if (d.url.indexOf('<a href') != -1) {
+                                            return d.url
+                                        } else {
+                                            return "<a href=" + d.url + " target=\"_blank\">原文</a>";
+                                        }
+                                    },
+                                    width: 180
+
+                                },
+                                {align: "left", title: "操作", toolbar: "#deleteOperationBar", width: 120}
+
+                            ]],
+                            size: '',
+                            done: function () {
+                                $(layero).find('.layui-dataGrid-view').css('margin', '0');
+                            },
+                        }
+                        let telegramTableConfig = {
+                            elem: '#formTelegramTable',
+                            data: telegramList,
+                            page: true,
+                            height: '200px',
+                            limit: 2,
+                            cols: [[
+                                {type: 'numbers'},
+                                {field: 'title', title: '项目内容'},
+                                {
+                                    field: 'link', title: '连接', sort: true, width: 180, templet: function (d) {
+                                        if (d.hasOwnProperty('link')) {  // 添加时的财联社部分加载
+                                            return "<a href=" + d.link + " target=\"_blank\">原文</a>";
+                                        } else {  // 编辑时的财联社部分加载
+                                            if (d.url.indexOf('<a href') != -1) {
+                                                return d.url
+                                            } else {
+                                                return "<a href=" + d.link + " target=\"_blank\">原文</a>";
+                                            }
+                                        }
+
+                                    }
+                                },
+                                {align: "left", title: "操作", toolbar: "#deleteOperationBar", width: 120}
+                            ]],
+                            size: '',
+                            done: function () {
+                                $(layero).find('.layui-dataGrid-view').css('margin', '0');
+                            },
+                        }
+                        // date render
+
+                        date.render(dialog_time_config);
+                        // add or not add
+                        let news_telegram_url = undefined;
+                        if (expTpe) {
+
+                            news_telegram_url = setter.djangoAPI + "getEventDetail/?e_name=" + expTpe.eventName + "&token=" + setter.getToken() + '&TrdEnv=' + setter.TrdEnv;
+                            // old event name can not be edited.
+                            $('#eventName').prop('readonly', true);
+
+
+                            $.ajax({
+                                url: news_telegram_url, defer: true, success: function (r) {
+                                    if (r.code === 0) {
+                                        const data = r.data
+                                        const title = data.newsList;
+                                        const telegram = data.telegramList;
+                                        title.map(elem => newsList.push(elem));
+                                        telegram.map(elem => telegramList.push(elem));
+                                        //dataGrid render
+                                        var telegram_table = table.render(telegramTableConfig);
+                                        var news_table = table.render(newsTableConfig);
+                                    }
+
+                                }
+                            })
+
+                        } else {
+                            //dataGrid immediately render.
+                            var telegram_table = table.render(telegramTableConfig);
+                            var news_table = table.render(newsTableConfig);
+                        }
+
+
+                        // title item event that can be edited.
+                        table.on('tool(formNewsTable)', function (obj) {
+                            let event = obj.event;
+                            let data = obj.data;
+                            if (event === "edit") showAddNewsDialog(data);
+                            else if (event === 'del') delAddNewsDialog(data);
+
+                        })
+                        table.on('tool(formTelegramTable)', function (obj) {
+                            let event = obj.event;
+                            let data = obj.data;
+                            if (event === "edit") showTelegramDialog(data);
+                            if (event === "del") delAddTelegramDialog(data);
+                        })
+
+
+                        // time parameters
+                        let sd = $('#sd').val()
+                        let ed = $('#ed').val()
+                        // button of form events
+                        $("#eAddBtnNew").click(function () {
+                            let ed = $('#ed').val();
+                            let code = $('#selectCode').val();
+                            if (ed && code) showAddNewsDialog();
+                            else if (!code) layer.tips("请输入股票代码", "#eAddBtnNew", {tips: [1, "#ff4c4c"]});
+
+                            return false;
+                        })
+                        $('#eAddBtnTelegram').click(function () {
+                            let ed = $('#ed').val();
+                            showTelegramDialog();
+
+                            return false;
+                        })
+                        $('#eCancelButton').click(function () {
+                            layer.close(index);
+                            return false;
+                        })
+
+                        // select constructor function
+                        function SelectForm(id) {
+                            // this variable.
+                            this.id = id; // selecting input id.
+                            this.id_dom = $('#' + id);
+                            this.query_code_url = "getFollowStock/"
+                            this.select_config = {
+                                elem: "#" + this.id,
+                                name: "select_code",
+                                value: "name",
+                                hint: "选择或者输入股票代码",
+                                data: [],// default data is empty.
+
+
+                            }
+                            this.code = undefined;
+                            this.news_data = [];
+
+                            this.query_all_code = function (callback) {
+                                const where_field = {
+                                    word_or_name: "", limit: 15,
+                                    page: 1,
+                                    TrdEnv: setter.TrdEnv,
+                                    token: setter.getToken()
+                                }
+                                let that = this
+                                admin.req(setter.djangoAPI + this.query_code_url, where_field, function (res) {
+                                    callback.call(that, res);
+                                });
+                            }
+
+                            // render select input
+                            this.callback_render = function (res) {
+                                if (res.code === 0) {
+                                    let data = [];
+                                    res.data.map(elem => data.push({select_code: elem, name: elem[0]}));
+                                    this.select_config.data = data;
+                                    // starting render
+                                    formX.renderSelect(this.select_config);
+                                    form.on('select(selectCode)', this.select_event);
+
+                                }
+                            }
+                            this.select_event = function (data) {
+                                const code = data.value;
+
+                                if (sd && ed) {
+                                    const news_url = "getStockNews/?limit=10&page=1"
+                                    admin.req(setter.djangoAPI + news_url, {
+                                        code: this.code,
+                                        'token': setter.getToken(),
+                                        TrdEnv: setter.TrdEnv
+                                    }, function (res) {
+                                        console.log(res)
+                                    })
+                                }
+
+
+                            }
+                        }
+
+                        let select_code = new SelectForm("selectCode");
+                        select_code.select_config.initValue = expTpe ? expTpe.selectCode : "";
+                        select_code.query_all_code(select_code.callback_render);
+                        // fill in the value to the form.
+                        formX.val('eEventEditForm', expTpe);
+                        // form submit
+                        form.on("submit(mainFormSubmit)", function (object) {
+                            const form_filed = object.field;
+                            form_filed.newsList = newsList;
+                            form_filed.telegramList = telegramList;
+
+                            $.post(setter.djangoAPI + "createNewsEvent/", {
+                                data: JSON.stringify(form_filed),
+                                'token': setter.getToken(),
+                                TrdEnv: setter.TrdEnv
+                            }, function (res) {
+                                if (res.code === 0) {
+                                    layer.close(index);
+                                    layer.msg(res.msg, {icon: 1});
+                                    dataGrid.render(event_table_setting);
+                                }
+                            }, 'json')
+
+                            return false
+                        })
+
+                        // edit dialog
+                        function showAddNewsDialog(exp) {
+                            admin.open({
+                                type: 1,
+                                offset: '150px',
+                                area: ['600px', "400px"],
+                                title: (exp ? '修改' : '添加') + '项目',
+                                content: $('#eNewsChildDialog').html(),
+                                success: function (layero, dindex) {
+                                    form.render();
+                                    const startD = $('#ed').val();
+                                    ed = get3day(startD, '+')
+                                    sd = get3day(startD, '-')
+                                    const code = exp ? exp : $('#selectCode').val();
+                                    const news_url = "getStockNews/?limit=10&page=1"
+                                    const req_config = {
+                                        sd: sd,
+                                        ed: ed,
+                                        code: code.split(',')[0],
+                                        'token': setter.getToken(),
+                                        TrdEnv: setter.TrdEnv
+                                    }
+                                    let url = {}
+                                    admin.req(setter.djangoAPI + news_url, req_config, function (res) {
+                                        // ajax callback function
+                                        let data = []
+                                        if (res.code === 0) {
+                                            res.data.map(elem => {
+                                                data.push(elem.title);
+                                                url[elem.title] = elem.link;
+                                            })
+                                            //render formX select
+
+                                            let select_config = {
+                                                elem: "#newsSelect",
+                                                name: "title",
+                                                hint: "选择或者输入事件",
+                                                initValue: exp ? exp.title : "",
+                                                data: data
+                                            }
+
+
+                                            formX.renderSelect(select_config);
+
+                                        }
+                                    })
+                                    // form.val('eNewsChildDialogForm', exp);
+                                    // this form submit event
+                                    form.on('submit(newsAddButton)', function (data) {
+                                        //@todo post the title that needs to be added
+                                        if (!exp)// added data
+                                        {
+                                            newsList.push(data.field);
+                                        } else {
+                                        }
+                                        newsTableConfig.data = newsList;
+                                        table.render(newsTableConfig);
+                                        layer.close(dindex);
+                                        return false // prevent reload page event;
+
+
+                                    })
+                                    // select event
+                                    form.on("select(newsSelect)", function (d) {
+                                        $('#newsLink').attr('value', url[d.value]);
+
+                                    })
+
+                                    // cancel to submit;
+                                    $('#newsCancelForm').click(function (e) {
+                                        // only close this window.
+                                        layer.close(dindex);
+                                        // close this window because avoid other bugs...
+                                        return false;
+                                    })
+                                }
+
+                            })
+
+
+                        }
+
+                        // del a row new
+                        function delAddNewsDialog(data) {
+
+                            for (let i = 0; i < newsList.length; i++) {
+                                let old_data = newsList[i];
+                                if (old_data.title === data.title) {
+                                    newsList.splice(i, 1);
+                                }
+                            }
+                            table.render(newsTableConfig);
+                        }
+
+                        // telegramDialog
+                        function showTelegramDialog(exp) {
+
+                            admin.open({
+                                    type: 1,
+                                    offset: '150px',
+                                    area: '800px',
+                                    title: (exp ? '修改' : '添加') + '项目',
+                                    content: $('#eTelegramChildDialog').html(),
+                                    success: function (layero, dindex) {
+                                        // card render
+                                        form.render();
+
+
+                                        let telegram_config = {
+                                            elem: "#telegramTable",
+                                            data: [],
+                                            url: setter.djangoAPI + "getCailianshe/",
+                                            limit: 15,
+                                            page: 1,
+                                            id: "telegram",
+                                            cellMinWidth: 100,
+                                            cols: [[
+                                                {type: "checkbox"},
+                                                {field: "date", title: "日期", align: "left"},
+                                                {field: "time", title: "时间", align: "left"},
+                                                {field: "content", title: "内容"},
+                                                {
+                                                    field: "url", title: "连接", align: "left", templet: function (d) {
+                                                        return "<a href=" + d.url + ">" + "内容连接" + "</a>";
+                                                    }
+                                                },
+                                                {field: "readnum", title: "阅读量", align: "left", sort: true},
+                                                {field: "commentnum", title: "评论量", align: "left", sort: true}
+                                            ]]
+                                        }
+
+                                        const startD = $('#ed').val();
+                                        ed = get3day(startD, '+')
+                                        sd = get3day(startD, '-')
+                                        console.log(startD, sd, ed)
+                                        // let code = $('#selectCode').val();
+                                        let where_for_query = {
+                                            sd: sd, ed: ed, red: '', 'token': setter.getToken(), 'relevanceCode': '',
+                                            'keyword': '', TrdEnv: setter.TrdEnv
+                                        };  // 默认用飘红的
+
+                                        form.render();
+                                        if (exp) {
+                                            // not add row
+                                            // telegram_config.url = undefined;
+
+                                            telegram_config.cols[0][0] = {type: "radio"}
+                                        } else {
+                                            // not to do anythings.
+
+                                        }
+                                        telegram_config.where = where_for_query;
+
+                                        // table render
+                                        let telegram_table = table.render(telegram_config);
+                                        // let telegramGrid = dataGrid.render(telegram_config);
+                                        form.on('submit(eTelegramSubmit)', function (data) {
+
+                                            const checkTable = table.checkStatus("telegram");
+                                            let all_rows_data = checkTable.data;
+                                            if (!all_rows_data) {
+                                                layer.msg("请选择数据", {icon: 2});
+                                                return false;
+                                            }
+                                            $.each(all_rows_data, function (index, data) {
+                                                telegramList.map(elem => {
+                                                    if (elem.content === data.content) {
+                                                        layer.msg("不能添加重复的股票事件");
+                                                        return false;
+                                                    }
+                                                })
+                                                data.title = data.content; // compatibility old version.
+                                                telegramList.push(data)
+
+                                            })
+                                            // To render telegram table of dialog.
+                                            table.render(telegramTableConfig);
+
+                                            layer.close(dindex);
+                                            return false;
+
+
+                                        })
+                                        // It's the same thing as close title window.
+                                        $('#telegramCancelForm').click(function (e) {
+                                            // only close this window.
+                                            layer.close(dindex);
+                                            // avoid other bugs...
+                                            return false;
+                                        })
+                                    }
+
+                                }
+                            )
+                        }
+
+                        // del a row telegram
+                        function delAddTelegramDialog(data) {
+                            for (let i = 0; i < telegramList.length; i++) {
+                                let old_data = telegramList[i];
+                                //@todo not complete code.
+                                if (old_data.content === data.content)
+                                    telegramList.splice(i, 1);
+                            }
+                            table.render(telegramTableConfig);
+                        }
+
+
+                    },
+
+                })
+
+
+            }
+
+            //button events
+            $('#addEvent').click(function () {
+                showEditModel();
+
+            });
+
+            // code search function
+            let $repeat = 0; // modify time
+            let $timeout = undefined;
+            // listen search input code event
+            $('#newsEventInput').bind('input oinput', function () {
+                let input = this;
+                if ($repeat === 0) {
+                    $repeat = 1;
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                } else {
+                    window.clearTimeout($timeout);
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                }
+            })
+
+            $("#newsEventCodeSelect").click(function (event) {
+                let code_name = event.target.innerText;
+                let code = code_name.split(' ')[0]
+                $("#newsEventInput").val(code);
+            });
+
+            get_search_stock_name({'value': ''})
+
+            // get_search_stock_name('')
+            function get_search_stock_name(input) {
+                let value = input.value;
+                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                    word_or_name: value,
+                    limit: 15,
+                    page: 1,
+                    TrdEnv: setter.TrdEnv,
+                    token: setter.getToken()
+                }, function (res) {
+                    let code = res.code;
+                    if (code === 0) {
+                        let data = res.data;
+                        let drop_menu = $('#newsEventMenu')
+                        $('#newsEventCodeSelect').empty()
+                        for (let i = 0; i < data.length; i++) {
+                            let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                            li.click(function () {
+                                input.value = data[i][0];
+                                drop_menu.removeClass('dropdown-open');
+                            })
+                            $('.dropdown-menu-nav').append(li);
+                        }
+                    }
+                })
+            }
+
+
+            //search Event
+            form.on('submit(eSearch)', function (e) {
+                let filed = e.field
+                let sd = filed.dateChange1
+                let ed = filed.dateChange2
+                let txt = filed.text
+                let code = filed.code
+
+                let event_table_setting = {
+                    elem: '#eEventsTable',
+                    page: true,
+                    cellMinWidth: 100,
+                    url: setter.djangoAPI + 'getNewsEvent/?limit=10&page=1',
+                    where: {
+                        'sd': sd,
+                        'ed': ed,
+                        'text': txt,
+                        'code': code,
+                        'token': setter.getToken(),
+                        TrdEnv: setter.TrdEnv
+                    },
+                    templet: '#eventCard',
+                    toolbar: '#operationBar',
+                    done: function (res, curr, count) {
+                        addMouseEvent();
+                        persons = res
+                        for (var i = 0; i < persons.length; i++) {
+                            console.log(persons[i].ctime.length < 9)
+                            if (persons[i].ctime.length < 9) {
+                                var trs = $(".layui-badge-rim")[i];
+                                trs.style.color = '#f54545'
+                            }
+                        }
+                    }
+                }
+
+                dataGrid.render(event_table_setting);
+
+                return false;
+            })
+
+
+        }
+    )
+
+
+</script>

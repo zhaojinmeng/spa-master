@@ -1,0 +1,342 @@
+<style type="text/css">
+    .application-list-item {
+        background-color: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .application-list-item:hover {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+    }
+
+    .application-list-item .application-list-item-header {
+        padding: 16px 12px 0 12px;
+    }
+
+    .application-list-item .application-list-item-header .head {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .application-list-item .application-list-item-header > h2 {
+        color: #333;
+        font-size: 18px;
+        display: inline-block;
+    }
+
+    .application-list-item .application-list-item-body {
+        padding: 12px 12px 12px 50px;
+        font-size: 0;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item {
+        display: inline-block;
+        width: 50%;
+        font-size: 26px;
+        color: #666;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item .text-num-item-title {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 10px;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item small {
+        font-size: 16px;
+    }
+
+    .application-list-item .application-list-item-tool {
+        font-size: 0;
+        background-color: #FAFAFA;
+        border-top: 1px solid #e8e8e8;
+        padding: 10px 0 5px 0;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+
+    .application-list-item .application-list-item-tool .application-list-item-tool-item {
+        display: inline-block;
+        width: 25%;
+        font-size: 18px;
+        text-align: center;
+        color: #999;
+        border-right: 1px solid #e8e8e8;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .application-list-item .application-list-item-tool .application-list-item-tool-item:last-child {
+        border-right: none;
+    }
+
+    /** // 应用列表样式结束 */
+    .boxes {
+        display: table;
+        width: 100%;
+        height: 100%;
+    }
+
+    .box {
+        display: table-cell;
+        text-align: left;
+
+    }
+
+    .tr {
+        display: table-row;
+    }
+
+    .item {
+        width: calc(223 / 1615 * 100%);
+        float: left;
+        position: relative;
+        display: block;
+        box-sizing: border-box;
+        margin-left: 7px;
+        margin-bottom: 5px;
+    }
+
+    .item:nth-child(1), .item:nth-child(8), .item:nth-child(15) {
+        margin-left: 0;
+    }
+
+</style>
+<div class="layui-fluid">
+
+    <!-- 表格顶部工具栏 -->
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <!--            <div class="layui-inline">-->
+            <!--                <label class="layui-form-label">股票选择:</label>-->
+            <!--                <div class="layui-input-inline">-->
+            <!--                    <div class="dropdown-menu" id="conditionMenu">-->
+            <!--                        <input name="code" id="conditionInput" lay-verType="message" autocomplete="off"-->
+            <!--                                class="layui-input" placholder="请输入股票代码" type="text" required>-->
+            <!--                        <ul class="dropdown-menu-nav" id="conditionCodeSelect">-->
+            <!--                        </ul>-->
+
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+            <div class="layui-inline">
+                <label class="layui-form-label w-auto">市场:</label>
+                <div class="layui-input-inline">
+                    <select name="className1" lay-verType="message" required>
+                        <option value="1">港股</option>
+                        <option value="3">A股</option>
+                        <option value="2">美股</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label w-auto">板块:</label>
+                <div class="layui-input-inline">
+                    <select name="className2" lay-verType="message" required>
+                        <option value="全部">全部</option>
+                        <option value="创业板">创业板</option>
+                        <option value="科创板">科创板</option>
+                        <option value="主板">主板</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label w-auto">上市状态:</label>
+                <div class="layui-input-inline">
+                    <select name="className3" lay-verType="message" required>
+                        <option value="全部">全部</option>
+                        <option value="已上市">已上市</option>
+                        <option value="近期上市">近期上市</option>
+                        <option value="即将上市">即将上市</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn icon-btn" lay-filter="eminSearch" lay-submit>
+                    <i class="layui-icon">&#xe615;</i>搜索
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="layui-tab-item layui-show">
+        <table id="marketTable" lay-filter="marketTable"></table>
+    </div>
+
+
+</div>
+
+<script type="text/html" id="followButton">
+    {{# if (d.follow===0){ }}
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="eFollow" value={{d.code}}>关注</button>
+    {{# } else{ }}
+    <!--    <button type="button" class="layui-btn layui-btn-sm layui-btn-disabled"  value={{d.code}} style="">已关注</button>-->
+    <button type="button" class="layui-btn layui-btn-sm layui-btn-disabled" lay-event="">已关注</button>
+    {{# } }}
+</script>
+
+
+<script>
+    layui.use(['layer', 'form', 'table', 'element', 'setter', 'dropdown', 'dataGrid', 'laydate'], function () {
+        let $ = layui.jquery;
+        let layer = layui.layer;
+        let form = layui.form;
+        let table = layui.table;
+        let util = layui.util;
+        let admin = layui.admin;
+        let date = layui.laydate;
+        let setter = layui.setter;
+        let dataGrid = layui.dataGrid;
+        setter.baseServer = '';
+
+
+        form.render();
+
+        // toolbar event listen
+        table.on('tool(marketTable)', function (obj) {
+            let event_name = obj.event;
+            let row_data = obj.data;
+            let post_data = [row_data.code + '   ' + row_data.stock_name];
+            if (row_data.code) {
+                switch (event_name) {
+                    case "eFollow":
+                        let index = layer.load(1);
+                        admin.req(setter.djangoAPI + 'addFollowStock/', {
+                            'data': JSON.stringify(post_data),
+                            'token': setter.getToken(),
+                            TrdEnv: setter.TrdEnv
+                        }, function (r) {
+                            layer.msg(r.msg);
+                            table.reload('Reload')
+                        }, "post");
+                        layer.close(index);
+                        break;
+                }
+            }
+        })
+
+        // 行数据换颜色
+        function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+            try {
+                var div = document.getElementById(DivId);
+                if (div != null) //找到对象了
+                {
+                    var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                    if (trs != null && trs.length > 0) {
+                        trs[RowIndex].style.color = Color;//字体颜色 
+                    }
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+        }
+
+        let kLineTableModelConfig = {
+            elem: '#marketTable',
+            id: 'Reload',
+            page: true,
+            sort: true,
+            autoSort: false,
+            size: 0,
+            url: setter.djangoAPI + 'getMarketQuotation/',
+            where: {
+                'marketType': '1',
+                'class_stock': '全部',
+                'list_time_s': '全部',
+                'token': setter.getToken(),
+                field: '',
+                order: '',
+                TrdEnv: setter.TrdEnv
+            },
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers', title: '序号', width: 50,}
+                , {field: 'code', width: 110, align: 'center', title: '股票代码'}
+                , {field: 'stock_name', width: 150, align: 'center', title: '股票名称'}
+                , {field: 'last_price', width: 90, title: '最新价', align: 'center'}
+                , {field: 'changes', width: 90, title: '涨跌额', align: 'center', sort: true}
+                , {field: 'change_rate', width: 90, align: 'center', title: '涨跌幅', sort: true}
+                , {field: 'volume', width: 115, align: 'center', title: '成交量', sort: true}
+                , {field: 'turnover', width: 115, align: 'center', title: '成交额', sort: true}
+                , {field: 'total_market_val', width: 115, align: 'center', title: '市值', sort: true}
+                , {field: 'list_time_s', width: 90, align: 'center', title: '上市状态'}
+                , {field: 'list_time', width: 110, align: 'center', title: '上市日期'}
+                , {field: 'class1', align: 'center', title: '分类'}
+                , {field: 'ifhk', width: 80, align: 'center', title: '港股通'}
+                , {field: 'jianjie', width: 140, align: 'center', title: '公司简介',}
+                , {field: 'maxTurnover60', width: 155, align: 'center', title: '60天最高成交额', sort: true}
+                , {field: 'minTurnover60', width: 155, align: 'center', title: '60天最低成交额', sort: true}
+                , {field: 'upContinueDays', width: 85, align: 'center', title: '涨(天)', sort: true}
+                , {field: 'downContinueDays', width: 85, align: 'center', title: '跌(天)', sort: true}
+                , {field: 'today_rf', width: 120, align: 'center', title: '今日首次涨停'}
+                , {field: 'NdayNupLimit', width: 115, align: 'center', title: 'N天N涨停', sort: true}
+                , {field: 'upLimitDays', align: 'center', title: '涨停(天)', sort: true}
+                , {field: 'downLimitDays', align: 'center', title: '跌停(天)', sort: true}
+                , {field: 'c3_rise', width: 105, align: 'center', title: '3天涨幅', sort: true}
+                , {field: 'c7_rise', width: 105, align: 'center', title: '7天涨幅', sort: true}
+                , {field: 'c30_rise', width: 110, align: 'center', title: '30天涨幅', sort: true}
+                , {field: 'c60_rise', width: 110, align: 'center', title: '60天涨幅', sort: true}
+                , {field: 'attention', align: 'center', title: '加入关注', templet: '#followButton'}
+            ]],
+            done: function (res, curr, count) {
+                persons = res.data
+                for (var i = 0; i < persons.length; i++) {
+                    if (persons[i].changes > 0)
+                        Layui_SetDataTableRowColor('marketTable', i, '#f54545');
+                    else if (persons[i].changes < 0)
+                        Layui_SetDataTableRowColor('marketTable', i, '#0f990f');
+                }
+            }
+        };
+
+        // simulate data;
+
+        // personalize collective
+        // input code name for query
+        // listen search input code event
+
+        // 排序工具 改为监听，并reload table
+        table.on('sort(marketTable)', function (obj) {
+            table.reload('Reload', {
+                    initSort: obj,
+                    where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                        field: obj.field //排序字段   在接口作为参数字段  field order
+                        , order: obj.type //排序方式   在接口作为参数字段  field order
+                    }
+                }
+            );
+            return false;
+        });
+
+
+        table.render(kLineTableModelConfig);
+
+
+        // submit event
+        form.on('submit(eminSearch)', function (data) {
+            console.log(data)
+            let code = $('#conditionInput').val();
+            let date = $('#dateChange').val()
+
+            kLineTableModelConfig.where.marketType = data.field.className1;
+            kLineTableModelConfig.where.class_stock = data.field.className2;
+            kLineTableModelConfig.where.list_time_s = data.field.className3;
+            kLineTableModelConfig.where.field = '';
+            kLineTableModelConfig.where.order = '';
+            kLineTableModelConfig.page = {curr: 1};
+            kLineTableModelConfig.iniiSort = {
+                field: 'stat_day' //排序字段，对应 cols 设定的各字段名
+                , type: 'asc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+            }
+
+            table.render(kLineTableModelConfig);
+
+
+        })
+
+    })
+</script>

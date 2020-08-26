@@ -1,0 +1,5 @@
+{
+  "djangoAPI": "http://192.168.1.230:7789/",
+  "ws_djangoAPI": "ws:192.168.1.230:7789/",
+  "TrdEnv": "SIMULATE"
+}

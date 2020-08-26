@@ -1,0 +1,573 @@
+<!--- 表格正文 -->
+<style>
+    .layui-form-switch {
+        margin-right: 50px;
+    }
+
+    span {
+        padding-right: 7px;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .green {
+        color: green;
+    }
+
+    .time_format {
+        float: left;
+        width: 25%;
+
+    }
+
+    [lay-id="ReloadDetail"] .layui-table-cell {
+        font-size: 14px;
+        padding: 0 5px;
+        height: auto;
+        overflow: visible;
+        text-overflow: inherit;
+        white-space: normal;
+        word-break: break-all;
+    }
+</style>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">股票选择:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" id="conditionMenu">
+                                <input name="code" id="conditionInput" lay-verType="message" autocomplete="off"
+                                       class="layui-input" placholder="请输入股票代码" type="text"
+                                       required>
+                                <ul class="dropdown-menu-nav" id="conditionCodeSelect">
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn"
+                                lay-filter="tbBasicTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <table id="dataTable" lay-filter="tbBasicTable"></table>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="dayButtons">
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="day">日k</button>
+</script>
+<script type="text/html" id="shareOptions">
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="share">期权</button>
+</script>
+<script type="text/html" id="tradeButtons">
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-blue" lay-event="orderStatus">交易明细</button>
+</script>
+
+<script type="text/html" id="transactionButtons">
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-red" lay-event="trade">交易</button>
+</script>
+
+<script class="modifyCodeForm" type="text/html" id="tradeDetail">
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+
+            <table id="dataTable_detail" lay-filter="tbBasicTable_detail" style="white-space: nowrap;"></table>
+        </div>
+    </div>
+</script>
+
+
+<!--cancel order tmplate-->
+<script type="text/html" id="cancelOrderButton">
+    {{# if(d.order_status=='全部已成'){ }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">撤单</button>
+    {{# } else if(d.order_status=='全部已撤单') { }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">撤单</button>
+    {{# }else{ }}
+    <button type="button" class="layui-btn layui-btn-xs" id="orderCancel" lay-event="cancel">撤单</button>
+    {{# }; }}
+</script>
+
+<!--modify order template-->
+<script type="text/html" id="modifyOrderButton">
+    {{# if(d.order_status=='全部已成'){ }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">改单</button>
+    {{# } else if(d.order_status=='全部已撤单') { }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">改单</button>
+    {{# }else{ }}
+    <button type="button" class="layui-btn layui-btn-xs" lay-event="modifyOrder">改单</button>
+    {{# };}}
+</script>
+
+<!--js of page-->
+<script type="text/javascript" defer="defer">
+    layui.use(['form', 'table', 'index', 'element', 'dropdown', 'setter'], function () {
+
+            let $ = layui.jquery;
+            let form = layui.form;
+            let table = layui.table;
+            let admin = layui.admin;
+            let element = layui.element;
+            let setter = layui.setter;
+            let index = layui.index
+
+            setter.baseServer = '';
+            form.render();
+
+            // 行数据换颜色
+            function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+                try {
+                    var div = document.getElementById(DivId);
+                    if (div != null) //找到对象了
+                    {
+                        var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                        if (trs != null && trs.length > 0) {
+                            trs[RowIndex].style.color = Color;//字体颜色 
+                        }
+                    }
+                } catch (e) {
+                    console.log(e.message);
+                }
+            }
+
+            // 打开对应订单
+            const table_config = {
+                elem: '#dataTable_detail',
+                id: 'ReloadDetail',
+                url: setter.djangoAPI + "tradeDetail/?st=&et=",
+                page: true,
+                limit: 10,
+                where: {
+                    'token': setter.getToken(),
+                    TrdEnv: setter.TrdEnv
+                },
+
+                cellMinWidth: 100,
+                cols: [[
+                    // {field: 'trade_type', title: '类型', width: "50", align: 'left' },
+                    // {field: 'code', title: '代码', align: 'left'},
+                    // {field: 'stock_name', title: '名称', align: 'left'},
+                    // {field: 'trade_object', title: '交易对象', width: "80", align: 'left'},
+                    {field: 'trd_side', title: '交易类型', width: "80", align: 'left'},
+                    {field: 'order_status', title: '交易状态', width: "120", align: 'left'},
+                    {field: 'qty', title: '数量', align: "left"},
+                    {field: 'price', title: '价格', align: 'left'},
+                    {field: 'sum', title: '金额', align: 'left'},
+                    {field: 'create_time', title: '下单时间', width: "180", align: 'left'},
+                    {field: 'updated_time', title: '更新时间', width: "180", align: 'left'},
+                    {title: '撤单', toolbar: '#cancelOrderButton', width: "60", align: 'left'},
+                    {title: '改单', toolbar: '#modifyOrderButton', width: "60", align: 'left'}
+
+                ]],
+            };
+
+
+            //render table
+            let dataTb = table.render({
+                elem: '#dataTable',
+                id: 'Reload',
+                page: true,
+                limit: 15,
+                url: setter.djangoAPI + "acountPosition/",
+                where: {
+                    'code': '',
+                    'token': setter.getToken(),
+                    'field': '',
+                    'order': '',
+                    TrdEnv: setter.TrdEnv
+                },
+                sort: true,
+                autoSort: false,
+                cellMinWidth: 100,
+                cols: [[
+                    {type: 'numbers'},
+                    {field: 'class', title: '类型', align: 'left', sort: true},
+                    {field: 'code', title: '代码', align: 'left', sort: true},
+                    {field: 'stock_name', title: '名称', align: 'left', sort: true},
+                    {field: 'nominal_price', title: '市价', align: 'left', sort: true},
+                    {field: 'zhang_die_e', title: "涨跌额", align: 'left', sort: true},
+                    {
+                        field: 'zhang_die_fu', title: '涨跌幅', align: 'left', sort: true, templet: function (d) {
+                            return d.zhang_die_fu + '%';
+                        }
+                    },
+                    {
+                        field: 'pl_ratio', title: '盈亏比例', align: 'left', sort: true, templet: function (d) {
+                            return d.pl_ratio + '%';
+                        }
+                    },
+                    {
+                        field: 'pl_val', title: '盈亏金额', align: 'left', sort: true, templet: function (d) {
+                            return d.pl_val.toFixed(3);
+                        }
+                    },
+                    {field: 'today_pl_val', title: '今日盈亏金额', align: 'left', sort: true},
+                    {field: 'qty', title: '持有数量', align: 'left', sort: true},
+                    {field: 'position_side', title: '持仓方向', align: 'left', sort: true},
+                    {field: 'can_sell', title: '可卖数量', align: 'left', sort: true},
+                    {field: 'market_val', title: '持股市值', align: 'left', sort: true},
+                    {field: 'cost_price', title: '摊薄成本', align: 'left', sort: true},
+                    {field: 'orderStatus', title: '交易明细', toolbar: "#tradeButtons", align: 'left'},
+                    {field: 'trade', title: '交易', toolbar: "#transactionButtons", align: 'left'},
+
+                ]],
+                done: function () {
+                    // 盈亏比例 , 盈亏金额 两列变颜色
+                    var index = -2;
+                    $("[data-field='pl_ratio']").children().each(function () {
+                        index++;
+                        if ($(this).text().slice(0, -1) < 0) {
+                            $('tr td[data-field=\'pl_ratio\']').eq(index).css("color", '#0f990f');
+                            $('tr td[data-field=\'pl_val\']').eq(index).css("color", '#0f990f');
+                        } else if ($(this).text().slice(0, -1) > 0) {
+                            $('tr td[data-field=\'pl_ratio\']').eq(index).css("color", '#f54545');
+                            $('tr td[data-field=\'pl_val\']').eq(index).css("color", '#f54545');
+                        } else {
+
+                        }
+                    });
+
+                    // 今日盈亏金额 变颜色
+                    var index = -2;
+                    $("[data-field='today_pl_val']").children().each(function () {
+                        index++;
+                        if ($(this).text() < 0) {
+                            $('tr td[data-field=\'today_pl_val\']').eq(index).css("color", '#0f990f');
+                        } else if ($(this).text() > 0) {
+                            $('tr td[data-field=\'today_pl_val\']').eq(index).css("color", '#f54545');
+                        } else {
+
+                        }
+                    });
+                },
+            });
+            table.render(dataTb);
+            // event for submit
+            form.on('submit(tbBasicTbSearch)', function (obj) {
+                let code = $('#conditionInput').val();
+                table.reload('Reload', {
+                    where: {'code': code, 'field': '', 'order': ''},
+                    page: {curr: 1}
+                })
+                return false
+            })
+
+            /* 表格工具条点击事件 */
+            table.on('tool(tbBasicTable)', function (obj) {
+                data = obj.data; // 获得当前行数据 glob data
+                console.log(data)
+                if (obj.event === 'trade') { // 交易
+                    index.go('data/order');
+                } else if (obj.event === 'orderStatus') { // 交易
+                    console.log('点击状态', obj.data)
+                    const code = obj.data.code;
+                    let orderID = '';
+                    let Type = undefined;
+                    if (code.includes('HK.')) {
+                        Type = 1;
+                    } else if (code.includes('US.')) {
+                        Type = 2;
+                    } else {
+                        Type = 3;
+                    }
+
+                    let content = $('#tradeDetail');
+                    admin.open({
+                        title: "交易明细",
+                        area: ["", ""],
+                        // offset: 'auto',
+                        offset: ['40%', "30%"], shade: false,
+                        content: content.html(), type: 1,
+                        success: function (layero, dIndex) {
+                            table_config.where.Type = Type;
+                            table_config.where.code = code;
+                            table_config.where.orderID = orderID;
+
+                            table.render(table_config);
+
+                            table.on('tool(tbBasicTable_detail)', function (obj) {
+                                if (obj.event === "cancel") {
+                                    layer.confirm('真的要撤单吗?', function (index) {
+                                        let ajax_parameter = {
+                                            url: setter.djangoAPI + 'cancelOrder/',
+                                            data: {
+                                                orderID: orderID,
+                                                code: code,
+                                                o_name: O_name,
+                                                'token': setter.getToken(),
+                                                TrdEnv: setter.TrdEnv
+                                            },
+                                            type: 'POST',
+                                            async: false,
+                                            success: function (result, status, xhr) {
+                                                layer.msg(result.msg);
+                                                // table.reload("ReloadDetail");
+                                                table.reload('mainTable')
+                                                admin.btnLoading("#orderCacel", false);
+                                            }
+                                        }
+                                        console.log('撤单完成')
+                                        admin.ajax(ajax_parameter);
+                                        admin.btnLoading("#orderCancel");
+                                        layer.close(index);
+
+                                    })
+                                }
+                                // modify order
+                                else if (obj.event === "modifyOrder") {
+                                    console.log('点击修改订单')
+                                    let modifycontent = $('#modifyOrder');
+                                    admin.open({
+                                        title: "订单修改",
+                                        area: ["", ""],
+                                        content: modifycontent.html(), type: 1,
+                                        success: function (layero, dIndex) {
+                                            const money = $('#money_1');
+
+                                            function insert_stock_market(stock_code, old_data) {
+                                                // cancel hidden input
+                                                $("#marketPrice").removeAttr("hidden");
+
+                                                // To request market with the stock code;
+
+                                                admin.req(setter.djangoAPI + "getLastData/", {
+                                                    code: stock_code,
+                                                    TrdEnv: setter.TrdEnv,
+                                                    token: setter.getToken()
+                                                }, function (res) {
+                                                    if (res.code === 0) {
+                                                        let data = res.data;
+                                                        let price_dom = $('#stockPrice');
+                                                        let rate_dom = $('#stockRatio');
+                                                        $('#lot_size').val(data.lot_size)
+                                                        price_dom.css('padding', '9px 0');
+                                                        price_dom.prop('firstChild').nodeValue = (data.price + " " + data.ud + " ");
+                                                        data.ud.toString().substring(0, 1) == "-" ? (price_dom.removeClass('red'), price_dom.addClass('green'))
+                                                            : (price_dom.removeClass('green'), price_dom.addClass('red'));
+                                                        rate_dom.prop('firstChild').nodeValue = data.udp + "%";
+                                                        // render size of checkbox
+                                                        data.max_buy = Math.floor($('#power').val() / data.price);  // 最大可买原来是直接使用max_buy，现在改为用购买力算
+                                                        render_checkbox(data);
+                                                        // fill value
+                                                        // $('input[name="price"]').val(data.price);
+                                                        $('input[name="qty"]').attr('step', data.lot_size);
+                                                        if (old_data && old_data.qty) {
+                                                            $('input[name="numbers"]').val(data.qty);
+                                                            old_data.qty = data.qty
+                                                            render_checkbox(old_data);
+
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+                                            let data = obj.data;
+                                            const code = data.code
+                                            form.val("eStockTrade", data);
+
+                                            admin.ajax({
+                                                url: setter.djangoAPI + 'getAccountPower/?code=' + code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                                                success: function (res, status, xhr) {
+                                                    let data = res.data[0]
+                                                    $('#power').val(data.power)  // 选中股票，加载购买力
+                                                }
+                                            });
+
+                                            // 判断改单的方向，赋予仓位对应的值
+                                            if (data.trd_side === '买') {
+                                                insert_stock_market(code);
+                                            } else {
+                                                insert_stock_market(code, {'qty': 1});
+                                            }
+                                            const price_dom = $('input[name="price"]');
+                                            const qty_dom = $('input[name="qty"]');
+                                            $('input[name="qty"]').val(data.qty);
+                                            money.text((Number(price_dom.val()) * Number(qty_dom.val())).toFixed(2));
+
+                                            price_dom.bind('input oinput', function () {
+                                                const value = $('input[name="qty"]').val();
+                                                if (value && price_dom.val()) money.text((Number(value) * Number(price_dom.val())).toFixed(2));
+                                                else money.text("");
+                                                // 价格的变化，在买入的时候会改变仓位的数量
+                                                if (data.trd_side === '买') {
+                                                    const max_buy = Math.floor($('#power').val() / price_dom.val());
+                                                    render_checkbox({'max_buy': max_buy})
+                                                }
+
+
+                                            })
+                                            qty_dom.bind('input oinput', function (e) {
+                                                const price = price_dom.val();
+                                                if (price && qty_dom.val()) money.text((Number(price) * Number(qty_dom.val())).toFixed(2));
+                                                else money.text("");
+                                            })
+
+                                            form.on("checkbox(position)", function (res) {
+                                                let all_check_position = $("input[lay-filter=\"position\"]");
+                                                let checked = res.elem.checked;
+                                                $.each(all_check_position, function (index, dom) {
+                                                    $(dom).removeAttr('checked');
+                                                })
+                                                if (checked) {
+                                                    $(res.elem).prop("checked", "true");
+                                                    const number = $(res.elem).attr("title").split("|")[1];
+                                                    if (number) {
+                                                        $('input[name="qty"]').val(number);
+                                                        // calculate price
+                                                        money.text((number * $('input[name="price"]').val()).toFixed(2))
+                                                    }
+                                                } else {
+                                                    const number = $('input[name="qty"]').attr("step")
+                                                    $('input[name="qty"]').val(number);
+                                                    money.text((number * $('input[name="price"]').val()).toFixed(2))
+                                                }
+                                                form.render("checkbox");
+                                            })
+
+                                            form.on('submit(mOrderSubmit)', function (data) {
+                                                // 改单保存 前的数量判断，为0不能提交
+                                                if ($('input[name="qty"]').val() === '0') {
+                                                    layer.msg('数量不合法')
+                                                } else {
+                                                    let ajax_parameter = {
+                                                        url: setter.djangoAPI + 'modifyOrder/',
+                                                        data: {
+                                                            orderID: obj.data.order_id,
+                                                            code: obj.data.code,
+                                                            price: data.field.price,
+                                                            num: data.field.qty,
+                                                            'token': setter.getToken(),
+                                                            TrdEnv: setter.TrdEnv
+                                                        },
+                                                        type: 'POST',
+                                                        async: false,
+                                                        success: function (result, status, xhr) {
+                                                            layer.msg(result.msg);
+
+                                                        }
+                                                    }
+                                                    admin.ajax(ajax_parameter)
+                                                    let Type = undefined;
+                                                    if (code.includes('HK.')) {
+                                                        Type = 1;
+                                                    } else if (code.includes('US.')) {
+                                                        Type = 2;
+                                                    } else {
+                                                        Type = 3;
+                                                    }
+                                                    let all_title = $('.layui-tab-title').children();
+                                                    $.each(all_title, function (index, dom) {
+                                                        $(dom).removeClass('layui-this');
+                                                    })
+                                                    let this_style = all_title[Type - 1];
+                                                    $(this_style).addClass('layui-this');
+                                                    layer.close(dIndex);
+                                                    // table.reload('ReloadDetail')
+
+                                                    return false
+                                                }
+
+                                            });
+                                            $('input[name="qty"]').bind("input oinput", function (res) {
+
+                                                let all_check_position = $("input[lay-filter=\"position\"]");
+
+                                                $.each(all_check_position, function (index, dom) {
+                                                    $(dom).removeAttr('checked');
+                                                })
+                                                form.render("checkbox");
+
+                                            })
+                                        }
+                                    });
+
+                                }
+                            })
+                        },
+                    })
+                }
+
+                // dropdown.hideAll();
+            });
+
+            // 工具条 点击排序事件重写
+            table.on('sort(tbBasicTable)', function (obj) {
+                table.reload('Reload', {
+                    initSort: obj, where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                        field: obj.field //排序字段   在接口作为参数字段  field order
+                        , order: obj.type //排序方式   在接口作为参数字段  field order
+                    }
+                })
+                return false;
+
+            });
+
+            // code search function
+            let $repeat = 0; // modify time
+            let $timeout = undefined;
+            // listen search input code event
+            $('#conditionInput').bind('input oinput', function () {
+                let input = this;
+                if ($repeat === 0) {
+                    $repeat = 1;
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                } else {
+                    window.clearTimeout($timeout);
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                }
+            })
+
+
+            // get_search_stock_name('')
+            function get_search_stock_name(input) {
+                let value = input.value;
+                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                    word_or_name: value, limit: 15,
+                    page: 1,
+                    TrdEnv: setter.TrdEnv,
+                    token: setter.getToken()
+                }, function (res) {
+                    let code = res.code;
+                    if (code === 0) {
+                        let data = res.data;
+                        let drop_menu = $('#conditionMenu')
+                        $('#conditionCodeSelect').empty()
+                        for (let i = 0; i < data.length; i++) {
+                            let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                            li.click(function () {
+                                input.value = data[i][0];
+                                drop_menu.removeClass('dropdown-open');
+                            })
+                            $('.dropdown-menu-nav').append(li);
+                        }
+                    }
+                })
+            }
+
+            $("#conditionCodeSelect").click(function (event) {
+                let code_name = event.target.innerText;
+                let code = code_name.split(' ')[0]
+                $("#conditionInput").val(code);
+            });
+
+            get_search_stock_name({'value': ''});
+        }
+    )
+
+
+</script>

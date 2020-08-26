@@ -1,0 +1,701 @@
+<!--web page-->
+<div class="layui-fluid">
+
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">用户管理</li>
+            </ul>
+
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="eUserTable" lay-filter="eUserTable"></table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--state button-->
+<script type="text/html" id="userTbState">
+    <input type="checkbox" lay-filter="userTbStateCk" value="{{d.userid}}" lay-skin="switch"
+           lay-text="正常|锁定" {{d.state==0?'checked':''}} style="display: none;"/>
+    <p style="display: none;">{{d.state==0?'正常':'锁定'}}</p>
+</script>
+<!--permission button -->
+<script type="text/html" id="tbPermissionBtn">
+    <a class="layui-btn layui-btn-sm layui-btn-warm" lay-event="permission">修改</a>
+</script>
+<!--messages button-->
+<script type="text/html" id="tbMessageBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="message">信息推送</a>
+</script>
+<!--role template function-->
+<script type="text/html" id="tbRoleTemplate">
+    {{#
+    const roles_span =[
+    '<span class="text-success">管理员</span>',
+    '<span class="text-info">正常</span>',
+    '<span class="text-danger">封禁</span>',
+    ];
+
+    return roles_span[d.role]
+    }}
+</script>
+
+
+<script type="text/html" id="userEditDialog">
+    <form id="userEditForm" lay-filter="userEditForm" class="layui-form model-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">账号:</label>
+            <div class="layui-input-block">
+                <input name="userid" id="userid" placeholder="请输入账号" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">姓名:</label>
+            <div class="layui-input-block">
+                <input name="name" id="name" placeholder="请输入用户名" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">角色:</label>
+            <div class="layui-input-block">
+                <div id="userEditRoleSel"></div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">权限范围</label>
+            <div class="layui-input-block">
+                <div id="bPermissionTree"></div>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="userEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!--message form dialog-->
+<script type="text/html" id="messageDialog">
+    <form id="eMessageForm" class="layui-form model-form" lay-filter="eMessageForm">
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">信息A类</label>
+            <div class="layui-input-block">
+                <div id="aMessageTree"></div>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+
+            <button class="layui-btn" lay-filter="msgEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button"  ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<script>
+    layui.use(['layer', 'form', 'setter', 'table', 'element', 'tree', 'xmSelect'], function () {
+        //  load models
+        const table = layui.table;
+        const $ = layui.jquery;
+        const admin = layui.admin;
+        const form = layui.form;
+        const tree = layui.tree;
+        const setter = layui.setter;
+        var xmSelect = layui.xmSelect;
+        setter.baseServer = '';
+        // roles data
+        let roles_data = {
+            1: {name: "管理员", value: "1"}, 2: {
+                name: '普通用户',
+                value: "2"
+            }, 3: {
+                name: '游客',
+                value: "3"
+            }
+        }
+        // columns setting
+        const user_table_cols = [[
+            {type: 'numbers', title: 'id'},
+            {field: 'userid', title: '账号', align: 'left'},
+            {field: 'name', title: '姓名', align: 'left'},
+            {field: 'position', title: '职位', align: 'left'},
+            {field: 'mobile', title: '手机', align: 'left'},
+            {field: 'email', title: '邮箱', align: 'left'},
+            {
+                field: 'roleName', title: '角色', templet: function (d) {
+                    if (d.roles === 0) return ""; // return empty string.
+                    let string_id = d.roles;
+                    let role_data = roles_data[Number(string_id)];
+                    return role_data.name;
+                }, sort: true, width: 150
+            },
+            {field: 'state', title: '状态', templet: '#userTbState',},
+            {field: 'permission', width: 120, title: '权限', templet: '#tbPermissionBtn',},
+            {field: 'messages', width: 120, title: '消息', templet: '#tbMessageBtn',}
+        ]]
+        // simulate data
+        const user_table_config = {
+            elem: '#eUserTable',
+            page: true,
+            url: setter.djangoAPI + 'getUserInfo/',
+            where: {'token': setter.getToken(),TrdEnv:setter.TrdEnv},
+            size: 2,
+            limit: 15,
+            cellMinWidth: 100,
+            cols: user_table_cols
+        }
+        // render user table
+        table.render(user_table_config);
+        // modify user dialog and event
+        table.on('tool(eUserTable)', function (obj) {
+            const event = obj.event;
+            const data = obj.data;
+            switch (event) {
+                case "permission":
+                    permission_dialog(data)
+                    break
+                case "message":
+                    message_dialog(data);
+                    break
+                default:
+                    layer.msg('非法操作');
+                    break
+            }
+        })
+
+        /* 修改用户状态 */
+        form.on('switch(userTbStateCk)', function (obj) {
+            var loadIndex = layer.load(2);
+
+            admin.req(setter.djangoAPI + "modifyUserState/", {
+                userid: obj.elem.value,
+                state: obj.elem.checked ? 0 : 1,
+                token: setter.getToken(),
+                TrdEnv: setter.TrdEnv
+            }, function (res) {
+                layer.close(loadIndex);
+                if (res.code === 0) {
+                    layer.msg(res.msg, {icon: 1});
+                    let render_checked = obj.elem.checked ? true : false;
+                    $(obj.elem).prop('checked', render_checked);
+                    form.render('checkbox');
+
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                    $(obj.elem).prop('checked', !obj.elem.checked);
+                }
+            }, 'post');
+        });
+
+        /* 显示表单弹窗 */
+        function permission_dialog(mData) {
+            admin.open({
+                type: 1,
+                title: '权限修改',
+                content: $('#userEditDialog').html(),
+                success: function (layero, dIndex) {
+                    // 回显表单数据
+                    form.val('userEditForm', mData);
+
+                    // 表单提交事件
+                    form.on('submit(userEditSubmit)', function (event) {
+                        console.log("submit");
+                        let role = insRoleSel.getValue('valueStr');
+                        let userid = $('#userid').val();
+                        let tree_node = tree.getChecked('b');
+                        let tree_list = [];
+
+                        $.each(tree_node, function (index, node) {
+                            tree_list.push(node);
+                        })
+                        console.log(tree_list)
+                        admin.req(setter.djangoAPI + "modifyUserpermission/",
+                            {
+                                role: role,
+                                userid: userid,
+                                permissionData: JSON.stringify(tree_list),
+                                token: setter.getToken(),
+                                TrdEnv: setter.TrdEnv
+                            },
+                            function (res) {
+                                layer.msg(res.msg, {icon: 1});
+                            }, "post");
+                        layer.close(dIndex);
+                        return false;
+                    })
+
+                    // 渲染多选下拉框
+                    var insRoleSel = xmSelect.render({
+                        el: '#userEditRoleSel',
+                        name: 'userEditRoleSel',
+                        layVerify: 'required',
+                        layVerType: 'tips',
+                        data: Object.values(roles_data)
+                    });
+
+
+                    //渲染权限列表
+                    let permission_data = [{
+                        'title': '股票'
+                        , 'id': 1
+                        , 'field': 'name1'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '关注的'
+                            , 'id': 11
+                            , 'field': 'name1.1'
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '搜索'
+                                , 'id': 111
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '添加'
+                                , 'id': 112
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '删除'
+                                , 'id': 113
+                                , 'field': ''
+                                , 'checked': true
+                            }]
+                        }, {
+                            'title': '持仓的'
+                            , 'id': 12
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '搜索'
+                                , 'id': 121
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '交易'
+                                , 'id': 122
+                                , 'field': ''
+                                , 'checked': true
+                            }]
+                        }, {
+                            'title': '交易明细'
+                            , 'id': 13
+                            , 'field': ''
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '搜索'
+                                , 'id': 131
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '撤单'
+                                , 'id': 132
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '改单'
+                                , 'id': 133
+                                , 'field': ''
+                                , 'checked': true
+                            }]
+                        }, {
+                            'title': '下单'
+                            , 'id': 14
+                            , 'field': ''
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '正股'
+                                , 'id': 141
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '期权'
+                                , 'id': 142
+                                , 'field': ''
+                                , 'checked': true
+                            }]
+                        }]
+                    }, {
+                        'title': '数据'
+                        , 'id': 2
+                        , 'field': 'name2'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '日k'
+                            , 'id': 21
+                            , 'field': 'name2.1'
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '日期模式'
+                                , 'id': 211
+                                , 'field': ''
+                                , 'checked': true
+                            }, {
+                                'title': '日历模式'
+                                , 'id': 212
+                                , 'field': ''
+                                , 'checked': true
+                            }]
+                        }, {
+                            'title': '分k'
+                            , 'id': 22
+                            , 'checked': true
+                        }, {
+                            'title': '期权列表'
+                            , 'id': 23
+                            , 'checked': true
+                        }, {
+                            'title': '分时对照'
+                            , 'id': 24
+                            , 'checked': true
+                        }, {
+                            'title': '逐笔明细'
+                            , 'id': 25
+                            , 'checked': true
+                        }]
+                    }, {
+                        'title': '行情'
+                        , 'id': 3
+                        , 'field': 'name3'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '涨跌周期对照'
+                            , 'id': 31
+                            , 'checked': true
+                        },{
+                            'title': '市场行情'
+                            , 'id': 36
+                            , 'checked': true
+                        }, {
+                            'title': '电报'
+                            , 'id': 32
+                            , 'checked': true
+                        }, {
+                            'title': '个股'
+                            , 'id': 33
+                            , 'checked': true
+                        }, {
+                            'title': '事件'
+                            , 'id': 34
+                            , 'checked': true
+                        }, {
+                            'title': '评论'
+                            , 'id': 35
+                            , 'checked': true
+                        }]
+                    }, {
+                        'title': '板块数据'
+                        , 'id': 5
+                        , 'field': 'name5'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '沪港通'
+                            , 'id': 51
+                            , 'checked': true
+                        }, {
+                            'title': '板块分时对照'
+                            , 'id': 52
+                            , 'checked': true
+                        }]
+                    }, {
+                        'title': '异动配置'
+                        , 'id': 6
+                        , 'field': 'name6'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '异动设置'
+                            , 'id': 61
+                            , 'checked': true
+                        }]
+                    }, {
+                        'title': '条件'
+                        , 'id': 4
+                        , 'field': 'name4'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '我的条件'
+                            , 'id': 41
+                            , 'checked': true
+                            , 'children': [{
+                                'title': '添加'
+                                , 'id': 411
+                                , 'checked': true
+                            }, {
+                                'title': '修改'
+                                , 'id': 412
+                                , 'checked': true
+                            }, {
+                                'title': '日志'
+                                , 'id': 413
+                                , 'checked': true
+                            }, {
+                                'title': '删除'
+                                , 'id': 414
+                                , 'checked': true
+                            }]
+                        }]
+                    }, {
+                        'title': '权限和推送'
+                        , 'id': 7
+                        , 'field': 'name7'
+                        , 'checked': true
+                        , 'children': [{
+                            'title': '用户管理'
+                            , 'id': 71
+                            , 'checked': true
+                        }, {
+                            'title': '消息内容'
+                            , 'id': 72
+                            , 'checked': true
+                        }, {
+                            'title': '消息模块'
+                            , 'id': 73
+                            , 'checked': true
+                        }, {
+                            'title': '用户日记'
+                            , 'id': 74
+                            , 'checked': true
+                        }]
+                    },];
+
+
+                    const all_permission_tree = ['b'];
+                    const tree_render_instance = [];
+                    all_permission_tree.forEach(function (value, index, array) {
+                        let permission_tree_setting = {
+                            elem: '#' + value + 'PermissionTree',
+                            data: permission_data,
+                            showCheckbox: true,
+                            id: value,
+                        }
+                        let instance = tree.render(permission_tree_setting);// start to render tree component.
+                        tree_render_instance.push(instance);
+                    }, this);
+                    // if have rendered tree then to request user permission
+
+                    admin.req(setter.djangoAPI + "getUserPermission/", {
+                        userid: mData.userid,
+                        'token': setter.getToken(),
+                        TrdEnv: setter.TrdEnv
+                    }, function (res) {
+                        let permission_user_data = JSON.parse(res.data.slice(7, -2));
+                        console.log(permission_user_data)
+                        let permission_tree_setting = {
+                            data: permission_user_data,
+                            showCheckbox: true
+                        }
+                        $.each(tree_render_instance, function (index, instance) {
+                            instance.reload(permission_tree_setting);
+                        })
+
+                    });
+
+                    // 回显选中角色
+                    if (mData && mData.roles) {
+                        // select role
+                        let role_id = mData.roles;
+
+                        insRoleSel.setValue([role_id])
+
+
+                    }
+                    ;
+
+                    // 禁止弹窗出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+
+        // message dialog
+        function message_dialog(d) {
+            let userid = d.userid;
+
+            const dialog_setting = {
+                type: 1,
+                title: "信息推送",
+                area: '500px',
+                content: $('#messageDialog').html(),
+                success: function (layero, index) {
+                    //  permission tree setting and simulate data
+                    let permission_data = [{
+                        title: '信息模块'
+                        , id: 1
+                        , field: '信息模块'
+                        , checked: true
+                        , spread:true
+                        , children: [{
+                            title: '信息模块-登录'
+                            , id: 13
+                            , field: 'loginName'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '信息模块-电报监控'
+                            , id: 14
+                            , field: 'cailianshe'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '信息模块-异动监控'
+                            , id: 15
+                            , field: 'indexMonitor'
+                            , checked: true
+                            , spread:true
+                        }]
+                    }, {
+                        title: '条件下单'
+                        , id: 2
+                        , field: '条件下单'
+                        , checked: true
+                        , spread:true
+                        , children: [{
+                            title: '条件下单-创建成功'
+                            , id: 21
+                            , field: 'createOption'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '条件下单-满足条件下单成功'
+                            , id: 22
+                            , field: 'pushOrder'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '条件下单-未完全满足过期失效'
+                            , id: 23
+                            , field: 'failureTimeOut'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '条件下单-执行成功'
+                            , id: 24
+                            , field: 'execSuccess'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '条件下单-提交失败'
+                            , id: 25
+                            , field: 'conditionFailOrder'
+                            , checked: true
+                            , spread:true
+                        }]
+                    },{
+                        title: '订单模块'
+                        , id: 3
+                        , field: '订单模块'
+                        , checked: true
+                        , spread:true
+                        , children: [{
+                            title: '订单模块-全部已成'
+                            , id: 31
+                            , field: 'FILLED_ALL'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '订单模块-部分成交'
+                            , id: 32
+                            , field: 'FILLED_PART'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '订单模块-全部已撤单'
+                            , id: 33
+                            , field: 'CANCELLED_ALL'
+                            , checked: true
+                            , spread:true
+                        }, {
+                            title: '订单模块-改单'
+                            , id: 34
+                            , field: 'MODIFY'
+                            , checked: true
+                            , spread:true
+                        }]
+                    },];
+
+                    // 回显表单数据
+
+                    const all_permission_tree = ['a'];
+                    const tree_render_instance = [];
+                    all_permission_tree.forEach(function (value, index, array) {
+                        let permission_tree_setting = {
+                            elem: '#' + value + 'MessageTree',
+                            data: permission_data,
+                            showCheckbox: true,
+                            id: value,
+                        }
+                        let instance = tree.render(permission_tree_setting);
+                        tree_render_instance.push(instance);
+                    }, this);
+
+                    // render
+                    admin.req(setter.djangoAPI + "getMsgPermission/", {
+                        userid: userid,
+                        'token': setter.getToken(),
+                        TrdEnv: setter.TrdEnv
+                    }, function (res) {
+
+                        let permission_user_data = JSON.parse(res.data.slice(2, -2));
+                        console.log(permission_user_data)
+                        let permission_tree_setting = {
+                            data: permission_user_data,
+                            showCheckbox: true
+                        }
+                        $.each(tree_render_instance, function (index, instance) {
+                            instance.reload(permission_tree_setting);
+                        })
+
+                    });
+
+
+                    // 表单提交事件
+                    form.on('submit(msgEditSubmit)', function (event) {
+                        let tree_node = tree.getChecked('a');
+                        let tree_list = [];
+
+                        $.each(tree_node, function (index, node) {
+                            tree_list.push(node);
+                        })
+                        console.log(tree_list)
+                        admin.req(setter.djangoAPI + "modifyMsgpermission/", {
+                                userid: userid,
+                                msgPostData: JSON.stringify(tree_list),
+                                token: setter.getToken(),
+                            TrdEnv: setter.TrdEnv
+                            },
+                            function (res) {
+                                layer.msg(res.msg, {icon: 1});
+                            }, "post");
+                        layer.close(index);
+                        return false;
+                    })
+
+                    form.render();
+                }
+            }
+            admin.open(dialog_setting);
+        }
+
+
+        // event select item
+        let drop_menu = $('.dropdown-menu');
+        let button_drop = drop_menu.find('button:first');
+        let drop_list = drop_menu.find("ul");
+        drop_list.click(function (e) {
+            let target = e.target;
+            if ($.nodeName(target, "A")) {
+                button_drop.contents().first()[0].textContent = target.innerText;
+                drop_menu.removeClass("dropdown-open");
+            }
+
+        })
+    })
+
+</script>

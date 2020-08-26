@@ -1,0 +1,311 @@
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">信息模块</li>
+                <li>条件下单</li>
+                <li>订单模块</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="messageForm" lay-filter="Message">
+
+                            <div class="layui-form-item layui-form-text">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">所属模块:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px">
+                        <textarea name="modeName" id="modeName" class="layui-textarea"
+                                  lay-verify="required" placeholder="请输入模块名"
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">登录</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+
+                                    <textarea name="loginName" id="loginName"
+                                              placeholder="可选字段:用户名{user} | 时间{time} | 地点{city}"
+                                              class="layui-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">电报监控</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+
+                                    <textarea name="cailianshe" id="cailianshe"
+                                              placeholder="{content} {link}"
+                                              class="layui-textarea"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">异动监控</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+
+                                    <textarea name="indexMonitor" id="indexMonitor"
+                                              placeholder="{code} {Time} {udp} {level}"
+                                              class="layui-textarea"></textarea>
+                                </div>
+                            </div>
+
+
+                            <div class="layui-form-item">
+                                <div class="layui-input-block" style="padding-left: 325px">
+                                    <button class="layui-btn" lay-filter="formBasSubmit" lay-submit>提交</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                </div>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                </div>
+                <div class="layui-tab-item">
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="optionOrderForm" lay-filter="Message">
+
+                            <div class="layui-form-item layui-form-text">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">所属模块:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px">
+                        <textarea name="modeName" id="modeName_2" class="layui-textarea"
+                                  lay-verify="required" placeholder="请输入模块名"
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">条件下单-创建成功:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="createOption" id="createOption" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder="可选字段:时间{time} | 资金类型{cType} | 方向{direction} | 交易价格{buyPrice} | 交易数量{num} | 交易金额{money}"
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">条件下单-满足条件下单成功:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="pushOrder" id="pushOrder" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">条件下单-未完全满足过期失效:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="failureTimeOut" id="failureTimeOut" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">条件下单-执行成功:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="execSuccess" id="execSuccess" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">条件下单-下单失败:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                            <textarea name="conditionFailOrder" id="conditionFailOrder" class="layui-textarea"
+                                      lay-verify="required" placeholder="可选字段:失败信息{errMsg} | 订单信息{orderMsg}"
+                                      lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-input-block" style="padding-left: 325px">
+                                    <button class="layui-btn" lay-filter="formBasSubmit" lay-submit>提交</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                </div>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                </div>
+                <div class="layui-tab-item">
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="futuOrderForm" lay-filter="Message">
+
+                            <div class="layui-form-item layui-form-text">
+                                <label class="layui-form-label layui-form-required" style="width: 150px;">所属模块:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px">
+                        <textarea name="modeName" id="modeName_3" class="layui-textarea"
+                                  lay-verify="required" placeholder="请输入模块名"
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">订单模块-全部已成:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="FILLED_ALL" id="FILLED_ALL" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">订单模块-部分成交:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="FILLED_PART" id="FILLED_PART" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">订单模块-全部已撤单:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="CANCELLED_ALL" id="CANCELLED_ALL" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label layui-form-required"
+                                       style="width: 150px;">订单模块-改单:</label>
+                                <div class="layui-input-block" style="width: 400px;padding-left: 70px;">
+                        <textarea name="MODIFY" id="MODIFY" class="layui-textarea"
+                                  lay-verify="required"
+                                  placeholder=""
+                                  lay-verType="message" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-input-block" style="padding-left: 325px">
+                                    <button class="layui-btn" lay-filter="formBasSubmit" lay-submit>提交</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                </div>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'dropdown', "tagsInput", 'setter'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        const admin = layui.admin;
+        var util = layui.util;
+        var setter = layui.setter;
+        var dropdown = layui.dropdown;
+        let tagsInput = layui.tagsInput;
+        setter.baseServer = '';
+        form.render();
+        // model input hint
+
+        // 表单提交事件
+        form.on('submit(formBasSubmit)', function (data) {
+            let postdata = data.field
+            // search model name
+            let title_dom = $('li[class="layui-this"]');
+            let mode = title_dom.text();
+            postdata.mode = mode;
+            // console.log(JSON.stringify(postdata))
+
+            admin.req(setter.djangoAPI + "modifyMsgModel/", {
+                    postdata: JSON.stringify(postdata),
+                    token: setter.getToken(),
+                TrdEnv:setter.TrdEnv
+                },
+                function (res) {
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                    }
+                }, "post");
+            return false;
+        })
+
+
+        $('.layui-tab-title').on('click', function (title) {
+
+            if (title.toElement.textContent == "信息模块") {
+                reqTabModeData('信息模块');
+            } else if (title.toElement.textContent == "条件下单") {
+                reqTabModeData('条件下单');
+            } else if (title.toElement.textContent == "订单模块") {
+                reqTabModeData('订单模块');
+            }
+        });
+
+
+        // 模块信息渲染
+        let reqTabModeData = function (modeTab) {
+            admin.req(setter.djangoAPI + "getMsgModelInfo/", {
+                modeTab: modeTab,
+                'token': setter.getToken(),
+                TrdEnv:setter.TrdEnv
+            }, function (res) {
+                if (res.code === 0) {
+                    let data = res.data;
+                    // console.log(data.modeName)
+                    if (modeTab === '信息模块') {
+                        console.log('信息模块')
+                        $('#modeName').val(data.modeName);
+                        $('#loginName').val(data.loginName);
+                        $('#cailianshe').val(data.cailianshe);
+                        $('#indexMonitor').val(data.indexMonitor);
+                    } else if (modeTab === '条件下单') {
+                        console.log('条件下单')
+
+                        $('#modeName_2').val(data.modeName);
+                        $('#createOption').val(data.createOption);
+                        $('#pushOrder').val(data.pushOrder);
+                        $('#failureTimeOut').val(data.failureTimeOut);
+                        $('#execSuccess').val(data.execSuccess);
+                        $('#conditionFailOrder').val(data.conditionFailOrder);
+                    } else if (modeTab === '订单模块') {
+                        console.log('订单模块')
+
+                        $('#modeName_3').val(data.modeName);
+                        $('#FILLED_ALL').val(data.FILLED_ALL);
+                        $('#FILLED_PART').val(data.FILLED_PART);
+                        $('#CANCELLED_ALL').val(data.CANCELLED_ALL);
+                        $('#MODIFY').val(data.MODIFY);
+                    }
+
+
+                }
+            });
+        }
+
+        reqTabModeData('信息模块');
+
+    })
+</script>

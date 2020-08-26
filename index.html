@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<META HTTP-EQUIV="pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate">
+<META HTTP-EQUIV="expires" CONTENT="0">
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="icon" href="assets/images/favicon.ico"/>
+    <title></title>
+    <link rel="stylesheet" href="assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="assets/module/admin.css?v=318"/>
+    <link rel="stylesheet" href="assets/module/fonts/style.css"/>
+    <style type="text/css">
+        .trade_rise {
+            font-weight: bolder;
+            color: red;
+        }
+
+        .trade_depreciate {
+            font-weight: bolder;
+            color: green;
+        }
+
+        .up_arrow .down_arrow {
+            font-size: 15px;
+        }
+
+    </style>
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <!-- 头部 -->
+    <div class="layui-header">
+        <div class="layui-logo text-center" id="title2">
+        </div>
+        <ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item" lay-unselect>
+                <a ew-event="flexible" title="侧边伸缩"><i class="layui-icon layui-icon-shrink-right"></i></a>
+            </li>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item" lay-unselect>
+                <a title="北京时间">
+                    <i class="layui-icon">北京：<span id="BeijingTime">时间</span></i>
+                    <!--                    <span class="layui-badge-dot"></span>-->
+                </a>
+            </li>
+            <li class="layui-nav-item" lay-unselect>
+                <a title="美国时间"><i class="layui-icon">美东: <span id="UsTime">时间</span></i></a>
+            </li>
+            <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                <a title="上证指数" href="?code=SH.000001#/kLine/k_line"><i class="layui-icon">A股:<span
+                        id="CHStatus"></span></i></a>
+            </li>
+            <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                <a title="恒生指数" href="?code=HK.800000#/kLine/k_line"><i class="layui-icon">港股: <span
+                        id="HKStatus"></span> </i></a>
+            </li>
+            <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                <a title="标普SPX" href="?code=US.SPX#/kLine/k_line"><i class="layui-icon">美股: <span id="USStatus"></span></i></a>
+            </li>
+            <li class="layui-nav-item" lay-unselect>
+                <a>
+                    <img src="assets/images/head.jpg" class="layui-nav-img">
+                    <cite id="huName"></cite>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd lay-unselect><a ew-event="" data-url="login.html" onclick="logout()">退出</a></dd>
+                    <dd lay-unselect><a ew-event="" data-url="" onclick="switchEnv()" id="switchEnv">切换环境</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item" lay-unselect>
+                <a ew-event="theme" title="主题"><i class="layui-icon layui-icon-more-vertical"></i></a>
+            </li>
+        </ul>
+    </div>
+    <!-- 侧边栏 -->
+    <div class="layui-side">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree arrow2" lay-filter="admin-side-nav" lay-shrink="_all"></ul>
+        </div>
+    </div>
+    <!-- 主体部分 -->
+    <div class="layui-body"></div>
+    <!-- 底部 -->
+    <div class="layui-footer layui-text">
+        <span id="SZ"></span>
+        <span id="HKI"></span>
+        <span id="SPX"></span>
+    </div>
+</div>
+<!-- 加载动画 -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 侧边栏渲染模板 -->
+<script id="sideNav" type="text/html">
+    {{#  layui.each(d, function(index, item){ }}
+    <li class="layui-nav-item">
+        <a href="{{item.url}}" target="{{item.target}}">
+            <i class="layui-icon {{item.icon}}"></i>&emsp;<cite>{{ item.name }}</cite>
+        </a>
+        {{# if(item.subMenus&&item.subMenus.length>0){ getSubMenus(item.subMenus); } }}
+    </li>
+    {{#  }); }}
+    {{# function getSubMenus(subMenus){ }}
+    <dl class="layui-nav-child">
+        {{# layui.each(subMenus, function(index, subItem){ }}
+        <dd>
+            <a href="{{ subItem.url }}" target="{{subItem.target}}">
+                {{# if(subItem.icon){ }}
+                <i class="layui-icon {{subItem.icon}}"></i>&emsp;
+                {{# } }}
+                {{ subItem.name }}
+            </a>
+            {{# if(subItem.subMenus&&subItem.subMenus.length>0){ getSubMenus(subItem.subMenus); } }}
+        </dd>
+        {{# }); }}
+    </dl>
+    {{# } }}
+</script>
+<!-- js部分 -->
+<script type="text/javascript" src="assets/libs/layui/layui.js"></script>
+<script type="text/javascript" src="assets/js/main.js?v=318"></script>
+<script type="text/javascript" defer="defer">
+    layui.use(['jquery', 'admin', 'setter'], function () {
+            let $ = layui.jquery;
+            let admin = layui.admin;
+            let setter = layui.setter;
+            //
+            // setter.baseServer = '';
+            //
+            //
+            let sz = $('#SZ');
+
+            let hk = $('#HKI');
+            let spx = $('#SPX');
+            let index_update = {
+                // SSEC: sz, HK50: hk, US500: spx
+                'SH.000001': sz, 'HK.800000': hk, 'US.SPX': spx
+            }
+
+            // index and time
+
+            function request_index_ajax() {
+                var socket = new WebSocket(setter.ws_djangoAPI + "test_websocket/?token=" + setter.getToken() + '&TrdEnv=' + setter.TrdEnv);
+                socket.onopen = function () {
+                    console.log('WebSocket open');//成功连接上Websocket
+                };
+                socket.onmessage = function (e) {
+                    let data = JSON.parse(e.data)
+                    let loginStatus = data.loginStatus
+                    data = data.contnet
+
+                    // 如果socket返回的登录状态为0则强制登出
+                    // console.log(setter.getToken().split(' ')[0])
+                    if (loginStatus[setter.getToken()] === '0' || !(setter.getToken() in loginStatus)) {
+                        socket.close(); //关闭TCP连接
+                        // 清空服务器登录信息
+                        admin.req(setter.djangoAPI + "logout/", {
+                                token: setter.getToken(),
+                                TrdEnv: setter.TrdEnv
+                            },
+                            function (res) {
+                                layer.msg(res.msg, {icon: 1});
+                                setter.removeToken()
+                                window.location.href = 'login.html'
+                            }, "post");
+                    }
+                    for (let i = 0; i < data.length; i++) {
+                        let index_data = data[i];
+                        let symbol = index_data['symbol']
+                        if (symbol in index_update) {
+                            let index_dom = index_update[symbol];
+                            update_dom(index_dom, index_data);
+                        }
+                    }
+                };
+                layui.ope
+                socket.onclose = function (e) {
+                    console.log(e);
+                    socket.close(); //关闭TCP连接
+                };
+                if (socket.readyState == WebSocket.OPEN) {
+                    socket.onopen();
+                }
+                window.s = socket;
+            }
+
+            logout = function () {
+                console.log('logout')
+                layer.confirm('是否登出？', {
+                    btn: ['确认', '取消',]
+                }, function (index, layero) {
+                    console.log(2)
+                    // 清空服务器登录信息
+                    admin.req(setter.djangoAPI + "logout/", {
+                            token: setter.getToken(),
+                            TrdEnv: setter.TrdEnv
+                        },
+                        function (res) {
+                            layer.msg(res.msg, {icon: 1});
+                            setter.removeToken()
+                            window.location.href = 'login.html'
+                        }, "post");
+
+
+                }, function (index) {
+                    console.log(3)
+                });
+            }
+
+            switchEnv = function () {
+                // 判断当前所处环境,的另外环境
+                let trdEnv = setter.TrdEnv === 'REAL' ? 'SIMULATE' : 'REAL'
+                let djangoAPI_old = setter.TrdEnv === 'REAL' ? 'http://futu1.haotui.la:7497' : 'http://aiai.haotui.la:8088'
+                let djangoAPI_new = trdEnv === 'REAL' ? 'http://futu1.haotui.la:7497' : 'http://aiai.haotui.la:8088'
+                console.log(trdEnv)
+
+                // 获得当前的链接，用于切换环境后恢复本页面
+                // let currURL = 'http://aiai.haotui.la:7497/index.html#/condition/condition'  // 本地测试
+                let currURL = window.location.href
+                let newURL = currURL.replace(djangoAPI_old, djangoAPI_new)
+                window.location.href = newURL
+
+            }
+
+
+            function update_dom(dom, data) {
+                sz.css("padding-right", '15px');
+                hk.css("padding-right", "15px");
+                spx.css("padding-right", "15px");
+
+                dom.empty();
+                let pcp = data['pcp']
+                let ud = data['ud']
+                let last_val = data['last']
+                let name = data['name']
+                let span_dom = $('<span style="color: grey;font-family: Sans-serif;font-size: medium"></span>').text(name + ":");
+                if (pcp[0] === '-') {
+                    let val_dom = $('<span style="color: green;font-weight: 900;padding-left: 3px"></span>').text(last_val);
+                    span_dom.append(val_dom)
+                    //depreciate index
+                    span_dom.addClass('trade_depreciate')
+                    // down dom
+                    let down_arrow = $('<i class="icon-down_arrow" style="font-size: 15px; color: green;"> </i> ');
+                    down_arrow.addClass('down_arrow');
+
+                    let down_ud = $(' <span style="padding-right: 10px;' +
+                        'text-decoration: ;padding-left: 2px;color: green"></span>').text(ud);
+
+                    let percentage = $(' <span style="padding-right: 10px;' +
+                        'text-decoration: ;padding-left: 2px;color: green"></span>').text(pcp);
+                    span_dom.append(down_arrow);
+                    span_dom.append(down_ud);
+                    span_dom.append(percentage);
+                    dom.append(span_dom);
+                } else {
+                    let val_dom = $('<span style="color: red;font-weight: 900;padding-left: 3px"></span>').text(last_val);
+                    span_dom.append(val_dom);
+                    span_dom.addClass('trade_rise');
+                    // arrow dom
+                    let down_arrow = $('<i class="icon-up_arrow" style="font-size: 15px; color: red;"> </i> ');
+                    down_arrow.addClass('up_arrow');
+
+                    let up_ud = $(' <span style="padding-right: 10px;color:red;' +
+                        'text-decoration: ;padding-left: 2px"></span>').text('+' + ud);
+
+                    let percentage = $(' <span style="padding-right: 10px;color:red;' +
+                        'text-decoration: ;padding-left: 2px"></span>').text('+' + pcp);
+                    span_dom.append(down_arrow);
+                    span_dom.append(up_ud);
+                    span_dom.append(percentage);
+                    dom.append(span_dom);
+
+                }
+
+
+            }
+
+            const checking_status_time = ["09:00",
+                "09:30",
+                "11:30",
+                "12:00",
+                "13:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "21:30",
+                "22:30",
+                "04:00",
+                "05:00",
+                "08:00",
+                "09:00"]
+            // status dom
+            const ch_status = $('#CHStatus');
+            const hk_status = $('#HKStatus');
+            const us_status = $('#USStatus');
+            const all_status = [ch_status, hk_status, us_status];
+
+            function request_status_ajax() {
+                $.ajax(setter.djangoAPI + "getMarketState/?TrdEnv=" + setter.TrdEnv + '&token=' + setter.getToken()).success(function (e) {
+                    if (e.code === 0) {
+                        // update china,hk,us trade status.
+                        const status_data = e.data;
+                        let i = 0;
+                        for (let x in status_data) {
+                            if (status_data.hasOwnProperty(x)) {
+                                const status = status_data[x];
+                                const dom = all_status[i];
+                                i++;
+                                dom.text(status);
+                            }
+
+                        }
+                    }
+
+
+                })
+            }
+
+            Date.prototype.format = function (format) {
+                var o = {
+                    "M+": this.getMonth() + 1, //month
+                    "d+": this.getDate(), //day
+                    "h+": this.getHours(), //hour
+                    "m+": this.getMinutes(), //minute
+                    "s+": this.getSeconds(), //second
+                    "q+": Math.floor((this.getMonth() + 3) / 3), //quarter
+                    "S": this.getMilliseconds() //millisecond
+                }
+                if (/(y+)/.test(format)) format = format.replace(RegExp.$1,
+                    (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+                for (var k in o) if (new RegExp("(" + k + ")").test(format))
+                    format = format.replace(RegExp.$1,
+                        RegExp.$1.length == 1 ? o[k] :
+                            ("00" + o[k]).substr(("" + o[k]).length));
+                return format;
+            }
+
+
+            function check_time() {
+                // time update
+                const china_time = new Date().format('yyyy-MM-dd hh:mm:ss');
+                const us_time = new Date(Date.parse(new Date() + "GMT +20")).format('yyyy-MM-dd hh:mm:ss');
+                // dom
+                const ch_time_dom = $('#BeijingTime');
+                const us_time_dom = $('#UsTime');
+                ch_time_dom.text(china_time);
+                us_time_dom.text(us_time);
+                const now_time = new Date().toTimeString().slice(0, 5);
+                if (checking_status_time.includes(now_time)) request_status_ajax();
+            }
+
+            setInterval(check_time, 1e3);//each second to check status;
+
+            // title名称
+            document.title = setter.TrdEnv === 'REAL' ? '好推量化交易 正式版' : '好推量化交易 模拟板'
+            $('#switchEnv').text(setter.TrdEnv === 'REAL' ? '切换到模拟板' : '切换到正式版')
+            $('#title2').text(setter.TrdEnv === 'REAL' ? '好推量化交易 正式版' : '好推量化交易 模拟板')
+
+            request_index_ajax();
+            request_status_ajax();
+        }
+    )
+
+    // <!--    });-->
+</script>
+</body>
+</html>

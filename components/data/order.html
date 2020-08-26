@@ -1,0 +1,504 @@
+<style type="text/css">
+    .market {
+        font-weight: 400;
+        padding: 9px 15px;
+        font-size: 1.2em;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .green {
+        color: green;
+    }
+
+    #marketPrice {
+        padding: 8px 0;
+        height: 0.8em;
+        margin: 0;
+    }
+
+    .market {
+        padding: 9px 0;
+    }
+</style>
+<input type=text style="display:none" id="can_sell" value="">
+<input type=text style="display:none" id="max_buy" value="">
+<input type=text style="display:none" id="lot_size" value="">
+<input type=text style="display:none" id="price" value="">
+<input type=text style="display:none" id="power" value="">
+<div class="layui-fluid">
+    <div class="layui-card">
+
+        <div class="layui-card-body">
+            <form class="layui-form" id="formOrder" lay-filter="Order">
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">
+                        选择股票
+                    </label>
+                    <div class="layui-input-block">
+                        <div class="dropdown-menu" id="orderMenu">
+
+                            <input name="word_or_name" id="searchInputCode" class="layui-input"
+                                   lay-verify="required" placeholder="请输入股票代码" autocomplete="off"
+                                   lay-verType="message" type="text" required>
+                            <ul class="dropdown-menu-nav" id="codeList">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required"
+                           style="">类型</label>
+                    <div class="layui-input-block">
+                        <p type="text" class="layui-form-label" style="text-align: left;padding-left: 10px;"
+                           name="condition_class"
+                           value="正股"
+                           lay-text="正股|期权" lay-skin="switch" checked readonly>正股</p>
+
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">操作方向</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="stock_direction" value="0" title="买入(做多)" checked
+                               lay-filter="radio_t">
+                        <input type="radio" name="stock_direction" value="1" title="卖出(做空)" lay-filter="radio_t">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">价格</label>
+                    <div class="layui-input-block">
+                        <input type="number" class="layui-input" style="display: inline-block;width: 150px"
+                               name="price"
+                               placeholder="开仓价格" min="0" lay-verType="msg" autocomplete="off"
+                               lay-verify="price\number"
+                               style="width: 160px" step="0.1">
+
+                        <div class="layui-inline" style="margin: 10px;padding: 0px;">
+                            <input type="checkbox" name="marketPriceButton" lay-filter="marketPrice" title="市价"
+                                   lay-skin="primary">
+                        </div>
+                    </div>
+
+                    <div id="marketPrice" hidden>
+                        <label class="layui-form-label">实时价格</label>
+                        <div class="layui-input-block layui-text market">
+                                <span class="layui-input-inline" id="stockPrice">0.00 <strong
+                                        id="stockRatio">0.00%</strong></span>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">数量</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="numbers" id="numbers" placeholder="股票数量" min="0" autocomplete="off"
+                               class="layui-input layui-input-inline">
+                    </div>
+
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">仓位选择</label>
+                    <div class="layui-input-block">
+                        <input type="checkbox" lay-filter="position" title="全仓" style="margin-right: 15px"
+                               name="invest[full]"
+                        >
+                        <input type="checkbox" lay-filter="position" title="半仓" name="invest[half]">
+                        <input type="checkbox" lay-filter="position" title="1/3仓" class="layui-input-block"
+                               name="invest[third]">
+                        <input type="checkbox" lay-filter="position" class="layui-input-block" title="1/4仓"
+                               name="invest[quarter]">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <!--                    @todo unfinished-->
+                    <label class="layui-form-label">金额</label>
+                    <div class="layui-input-block">
+                        <span type="number" class="layui-text" name="money" readonly
+                              placeholder="金额数量" style="padding-top: 8px;font-size: 18px;display: block;"></span>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="button" class="layui-btn" id="orderSubmitButton" lay-submit
+                                lay-filter="orderSubmit">提交
+                        </button>
+                        <button type="reset" class="layui-btn layui-btn-primary">&emsp;重置&emsp;
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['layer', 'jquery', 'index', 'setter', 'admin', 'form', 'dropdown'], function () {
+        let form = layui.form;
+        let admin = layui.admin;
+        let $ = layui.jquery;
+        let setter = layui.setter;
+        var dropdown = layui.dropdown;
+        const index = layui.index;
+        setter.baseServer = '';
+
+        form.render();
+
+        // input code name for query
+        let $repeat = 0; // modify time
+        let $timeout = undefined;
+        // listen search input code event
+        $('#searchInputCode').bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        })
+        $("#codeList").click(function (event) {
+            let code_name = event.target.innerText;
+            let code = code_name.split(' ')[0]
+            $("#searchInputCode").val(code);
+
+            let buy_radio = $('input[name="stock_direction"][value="0"]');
+            buy_radio.prop("checked", true);
+            form.render('radio');
+
+            //  切换个股时 复选框选择状态清空, 以及数量输入框恢复可编辑
+            let all_check_position = $("input[lay-filter=\"position\"]");
+            $.each(all_check_position, function (index, dom) {
+                $(dom).removeAttr('checked');
+            })
+            $('#numbers').prop('disabled', false);
+            if (code.includes('-')) {
+                $('p[name="condition_class"]').text('期权')
+            } else {
+                $('p[name="condition_class"]').text('正股')
+            }
+        });
+
+        get_search_stock_name({'value': ''});
+
+        // To request market with the stock code;
+        function render_checkbox(data) {
+            let all_size = data.max_buy ? data.max_buy : data.can_sell;
+            let all_box = $('input[name = "invest[full]"]');
+            let half_box = $('input[name = "invest[half]"]');
+            let third_box = $('input[name = "invest[third]"]');
+            let quarter_box = $('input[name = "invest[quarter]"]');
+
+            let size = $('#lot_size').val()
+
+            all_box.attr('title', "全仓|" + all_size);
+            half_box.attr("title", "半仓|" + Math.floor(all_size / 2 / size) * size);
+            third_box.attr('title', "1/3仓|" + Math.floor(all_size / 3 / size) * size);
+            quarter_box.attr('title', "1/4仓|" + Math.floor(all_size / 4 / size) * size);
+
+            let all_check_position = $("input[lay-filter=\"position\"]");
+            $.each(all_check_position, function (index, dom) {
+                let v = parseFloat($(dom)[0].title.split('|')[1])
+                if (v < 1) {
+                    $(dom).prop('disabled', true);
+                    $(dom).next().addClass('layui-btn-disabled');
+                } else {
+                    $(dom).prop('disabled', false);
+                    $(dom).next().addClass('layui-btn-enabled');
+                }
+            })
+
+            form.render('checkbox');
+
+        }
+
+        function insert_stock_market(stock_code, old_data) {
+            // cancel hidden input
+            $("#marketPrice").removeAttr("hidden");
+            console.log('old_data 0 ', old_data)
+
+            let ajax_config_power = {
+                url: setter.djangoAPI + 'getAccountPower/?code=' + stock_code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                success: function (res, status, xhr) {
+                    let data = res.data[0]
+                    $('#power').val(data.power)  // 选中股票，加载购买力
+                }
+            }
+            admin.ajax(ajax_config_power);
+
+            admin.req(setter.djangoAPI + "getLastData/", {
+                code: stock_code,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+            }, function (res) {
+                if (res.code === 0) {
+                    let data = res.data;
+                    let price_dom = $('#stockPrice');
+                    let rate_dom = $('#stockRatio');
+                    $('#can_sell').val(data.can_sell)
+                    $('#max_buy').val(data.max_buy)
+                    $('#lot_size').val(data.lot_size)
+                    $('#price').val(data.price)
+                    price_dom.val(data.price)
+                    price_dom.prop('firstChild').nodeValue = (data.price + " " + data.ud + " ");
+                    data.ud.toString().substring(0, 1) == "-" ? (price_dom.removeClass('red'), price_dom.addClass('green'))
+                        : (price_dom.removeClass('green'), price_dom.addClass('red'));
+                    rate_dom.prop('firstChild').nodeValue = data.udp + "%";
+                    // render size of checkbox
+                    data.max_buy = Math.floor($('#power').val() / data.price);  // 最大可买原来是直接使用max_buy，现在改为用购买力算
+                    render_checkbox(data);
+                    // fill value
+                    $('input[name="price"]').val(data.price);
+                    $('input[name="numbers"]').attr('step', data.lot_size);
+                    $('input[name="numbers"]').val(data.lot_size);
+                    if (old_data && old_data.hasOwnProperty('can_sell')) {
+                        console.log('old_data', old_data)
+                        $('input[name="numbers"]').val(old_data.can_sell);
+                        render_checkbox(old_data);
+
+                        // 如果全仓 小于等于 最小份额 则数量框禁用
+                        let full_num = $('input[name = "invest[full]"]').attr("title").split("|")[1];
+                        if (full_num <= $('#lot_size').val()) {
+                            $('#numbers').prop('disabled', true);
+                        }
+                        if (full_num === '0') {  // 如果选了卖出，全仓为0，则数量为0，不可编辑
+                            $('#numbers').val(0)
+                            $('#money').text(0)
+                        }
+
+                    }
+                    let conditon_class = $('p[name="condition_class"]').text()
+                    if (conditon_class === '期权')
+                        money.text((data.price * $('input[name="numbers"]').val() * 100).toFixed(2));
+                    else
+                        money.text((data.price * $('input[name="numbers"]').val()).toFixed(2));
+                }
+            });
+        }
+
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value, limit: 15,
+                page: 1,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#orderMenu');
+                    $('#codeList').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            insert_stock_market(data[i][0]);
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                }
+            })
+
+        }
+
+        let price_input = $('input[name="price"]');
+        let numbers = $('input[name="numbers"]');
+        let money = $('span[name="money"]');
+
+        price_input.bind('input oinput', function () {
+            let price = price_input[0].value;
+            if (price && numbers[0].value) {
+                let conditon_class = $('p[name="condition_class"]').text()
+                if (conditon_class === '期权')
+                    money.text((Number(price) * Number(numbers[0].value * 100)).toFixed(2));
+                else
+                    money.text((Number(price) * Number(numbers[0].value)).toFixed(2));
+                // 价格的变化，在买入的时候会改变仓位的数量
+                let bs = $("input[lay-filter=\"radio_t\"]:checked").val()  // 判断是买入买时卖出
+                if (bs === '0') {
+                    const max_buy = Math.floor($('#power').val() / price);
+                    render_checkbox({'max_buy': max_buy})
+                }
+
+            } else {
+                money.text("");
+            }
+        });
+
+        numbers.bind('input oinput', function () {
+            let number = numbers[0].value;
+            if (number && price_input[0].value) {
+                let conditon_class = $('p[name="condition_class"]').text()
+                if (conditon_class === '期权')
+                    money.text((Number(number) * Number(price_input[0].value * 100)).toFixed(2));
+                else
+                    money.text((Number(number) * Number(price_input[0].value)).toFixed(2));
+            } else {
+                money.text("");
+            }
+        });
+
+        // form event
+        form.on('submit(orderSubmit)', function (res) {
+            // 提交订单前的检查，数量为0不能点击提交按钮
+            if ($('#numbers').val() === '0') {
+                layer.msg('数量不合法')
+            } else {
+                admin.btnLoading("#orderSubmitButton");
+                let post_data = res.field;
+                post_data.token = setter.getToken()
+                post_data.TrdEnv = setter.TrdEnv
+                let callback_func = function (res) {
+                    // post order callback
+                    let code = res.code;
+                    if (code === 0) {
+                        layer.msg(res.msg);
+                        admin.btnLoading("#orderSubmitButton", false);
+                        // redirect to trade details page.
+                        window.code = post_data.word_or_name
+                        console.log(post_data.word_or_name)
+                        console.log(window.code)
+                        index.go("#/data/trade_details");
+
+                    } else {
+                        layer.msg(res.msg, {icon: 2})
+                        admin.btnLoading("#orderSubmitButton", false);
+                    }
+
+                }
+                admin.req(setter.djangoAPI + 'postTrade/', post_data, callback_func, 'post')
+                return false;
+            }
+
+
+        })
+
+        form.on('checkbox(marketPrice)', function (res) {
+            let checked = res.elem.checked;
+            if (checked) {
+                const realPrice = $('#stockPrice').val();
+                const number = $('#numbers').val();
+                let conditon_class = $('p[name="condition_class"]').text()
+                if (conditon_class === '期权')
+                    money.text((number * realPrice).toFixed(2) * 100)
+                else
+                    money.text((number * realPrice).toFixed(2))
+
+                $('input[name="price"]').attr("readonly", "");
+                $('input[name="price"]').val("");
+                $('input[name="price"]').attr("placeholder", "已经选择市价");
+            } else {
+                $('input[name="price"]').removeAttr('readonly');
+                $('input[name="price"]').val($('#price').val());
+                $('input[name="price"]').attr("placeholder", '请输入价格')
+            }
+        })
+        form.on("checkbox(position)", function (res) {
+            let all_check_position = $("input[lay-filter=\"position\"]");
+            let checked = res.elem.checked;
+            $.each(all_check_position, function (index, dom) {
+                $(dom).removeAttr('checked');
+            })
+            if (checked) {
+                $(res.elem).prop("checked", "true");
+                const number = $(res.elem).attr("title").split("|")[1];
+                if (number) {
+                    $('input[name="numbers"]').val(number);
+                    // calculate price
+                    let conditon_class = $('p[name="condition_class"]').text()
+                    if (conditon_class === '期权')
+                        money.text((number * $('input[name="price"]').val()).toFixed(2))
+                    else
+                        money.text((number * $('input[name="price"]').val()).toFixed(2))
+                }
+
+            } else {
+                const number = $('input[name="numbers"]').attr("step")
+                $('input[name="numbers"]').val(number);
+                let conditon_class = $('p[name="condition_class"]').text()
+                if (conditon_class === '期权')
+                    money.text((number * $('input[name="price"]').val() * 100).toFixed(2))
+                else
+                    money.text((number * $('input[name="price"]').val()).toFixed(2))
+            }
+
+            form.render("checkbox");
+        })
+        $('#numbers').bind("input oinput", function (res) {
+            let all_check_position = $("input[lay-filter=\"position\"]");
+
+            $.each(all_check_position, function (index, dom) {
+                $(dom).removeAttr('checked');
+            })
+            form.render("checkbox");
+
+        })
+        const search_code = location.search;
+        const code_reg = /code\s*=\s*(\S+\.?\S+)&?/i;
+        if (code_reg.test(search_code)) {
+            const code = code_reg.exec(search_code)[1];
+            // use code to request
+
+            $('#searchInputCode').val(code);
+            const origin_url = location.host + location.pathname + "#/data/order";
+            history.pushState({url: origin_url, title: ""}, document.title, location.pathname + "#/data/order")
+            insert_stock_market(code);
+
+        }
+
+
+        // 买入卖出按钮点击事件
+        form.on('radio(radio_t)', function (data) {
+            // 买入卖出按钮切换时，清空所有复选框的选中
+            let all_check_position = $("input[lay-filter=\"position\"]");
+            $.each(all_check_position, function (index, dom) {
+                $(dom).removeAttr('checked');
+            })
+
+            let code = $('#searchInputCode').val();
+            console.log('点击', data.value)
+            if (data.value === '0') { // 买入
+                $('#numbers').prop('disabled', false);
+                insert_stock_market(code, {'max_buy': $('#max_buy').val()});
+            } else {//卖出
+                insert_stock_market(code, {'can_sell': $('#can_sell').val()});
+            }
+        });
+
+
+        if (window.data) {
+            let code = data.code;
+            $('#searchInputCode').val(code);
+            insert_stock_market(code, data);
+            // 判断是从哪个页面跳转过来，持仓的含有pl_ratio字段
+            if (data.hasOwnProperty('pl_ratio')) {
+                console.log('持仓的')
+                let sell_radio = $('input[name="stock_direction"][value="1"]');
+                sell_radio.prop("checked", true);
+                window.data = {'code': code};
+            } else {
+                let sell_radio = $('input[name="stock_direction"][value="0"]');
+                sell_radio.prop("checked", true);
+            }
+
+            form.render('radio');
+            if (data.can_sell) $('input[name="numbers"]').val(data.can_sell);
+
+
+        }
+
+        ;
+    })
+</script>

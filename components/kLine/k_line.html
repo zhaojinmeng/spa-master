@@ -1,0 +1,592 @@
+<style type="text/css">
+    .application-list-item {
+        background-color: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all .2s;
+        height: 13.8em;
+    }
+
+    .application-list-item:hover {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+    }
+
+    .application-list-item .application-list-item-header {
+        padding: 16px 12px 0 12px;
+    }
+
+    .application-list-item .application-list-item-header .head {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .application-list-item .application-list-item-header > h2 {
+        color: #333;
+        font-size: 18px;
+        display: inline-block;
+    }
+
+    .application-list-item .application-list-item-body {
+        padding: 12px 12px 12px 50px;
+        font-size: 0;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item {
+        display: inline-block;
+        width: 50%;
+        font-size: 26px;
+        color: #666;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item .text-num-item-title {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 10px;
+    }
+
+    .application-list-item .application-list-item-body .text-num-item small {
+        font-size: 16px;
+    }
+
+    .application-list-item .application-list-item-tool {
+        font-size: 0;
+        background-color: #FAFAFA;
+        border-top: 1px solid #e8e8e8;
+        padding: 10px 0 5px 0;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+
+    }
+
+    .application-list-item .application-list-item-tool .application-list-item-tool-item {
+        display: inline-block;
+        width: 25%;
+        font-size: 18px;
+        text-align: center;
+        color: #999;
+        border-right: 1px solid #e8e8e8;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .application-list-item .application-list-item-tool .application-list-item-tool-item:last-child {
+        border-right: none;
+
+    }
+
+    /** // 应用列表样式结束 */
+    .boxes {
+        display: table;
+        width: 100%;
+        height: 100%;
+    }
+
+    .box {
+        display: table-cell;
+        text-align: left;
+
+    }
+
+    .tr {
+        display: table-row;
+    }
+
+    .item {
+        width: calc(223 / 1615 * 100%);
+        float: left;
+        position: relative;
+        display: block;
+        box-sizing: border-box;
+        margin-left: 7px;
+        margin-bottom: 5px;
+    }
+
+    .item:nth-child(1), .item:nth-child(8), .item:nth-child(15) {
+        margin-left: 0;
+    }
+
+</style>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格顶部工具栏 -->
+            <div class="layui-form">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">股票选择:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" id="conditionMenu">
+                                <input name="code" id="conditionInput" lay-verType="message" autocomplete="off"
+                                       lay-verify="required" class="layui-input" placholder="请输入股票代码" type="text"
+                                       required>
+                                <ul class="dropdown-menu-nav" id="conditionCodeSelect">
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">选择日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name="date" id="dateChange1" autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name="date" id="dateChange2" autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+                        <div class="layui-input-inline layui-hide">
+                            <input type="text" class="layui-input" name="date" id="dateChange3" autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="eSearch" id="search" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">日期模式</li>
+                <li>日历模式</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="KlineTable" lay-filter="eKlineTable"></table>
+                </div>
+                <div class="layui-tab-item">
+
+                    <div class="boxes">
+                        <div class="tr">
+                            <div class="box box1">星期一</div>
+                            <div class="box box2">星期二</div>
+                            <div class="box box3">星期三</div>
+                            <div class="box box3">星期四</div>
+                            <div class="box box3">星期五</div>
+                            <div class="box box3">星期六</div>
+                            <div class="box box3">星期日</div>
+                        </div>
+
+                    </div>
+                    <div class="layui-row" style="padding-top: 20px;" id="klineCard">
+
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 应用模板 -->
+<script type="text/html" id="klineCardItem">
+    <div class="item">
+        <div class="application-list-item">
+            <div class="application-list-item-header">
+                <!--                <img class="head" src="{{d.day}}"/>-->
+                <h2>{{d.day.slice(-2)}}</h2>
+                <h1 hidden>{{d.name}}</h1>
+            </div>
+            <div class="application-list-item-body" style="padding: 18% 0 10px 5px">
+                <div class="text-num-item" style="float: left">
+                    <div class="text-num-item-title">涨跌</div>
+                    {{# if(d.udp>0){ }}
+                    <div class="text-num-item-text" style="color: red;font-size: 20px">
+                        {{# if(d.udp){ }} {{d.udp}}%{{# }else{ }}{{#}; }}
+                    </div>
+
+                    {{# }else{ }}
+                    <div class="text-num-item-text" style="color: green;font-size: 20px">
+                        {{# if(d.udp){ }} {{d.udp}}%{{# }else{ }}{{#}; }}
+                    </div>
+                    {{# };}}
+                </div>
+                <div class="text-num-item" style="float: left">
+                    <div class="text-num-item-title">成交额(亿)</div>
+                    <div class="text-num-item-text" style="font-size: 20px">{{d.turnover}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script>
+
+
+</script>
+
+
+<script>
+    layui.use(['layer', 'form', 'table', 'element', 'setter', 'dropdown', 'dataGrid', 'laydate'], function () {
+        let $ = layui.jquery;
+        let layer = layui.layer;
+        let form = layui.form;
+        let table = layui.table;
+        let util = layui.util;
+        let admin = layui.admin;
+        let date = layui.laydate;
+        let setter = layui.setter;
+        let dataGrid = layui.dataGrid;
+        setter.baseServer = '';
+
+        // toolbar event listen
+        function getPreMonth(nowdate) {
+            nowdate.setMonth(nowdate.getMonth() - 1);
+            var y = nowdate.getFullYear();
+            var m = nowdate.getMonth() + 1;
+            m = m < 10 ? '0' + m : m
+            var d = nowdate.getDate();
+            d = d < 10 ? '0' + d : d
+            var formatwdate = y + '-' + m + '-' + d;
+            return formatwdate;
+        }
+
+        form.render();
+
+
+        let table_query_config = {
+            code: "US.AAPL",
+            sd: $('#dateChange1').val(),
+            ed: $('#dateChange2').val(),
+            token: setter.getToken(),
+            field: '',
+            order: '',
+            TrdEnv:setter.TrdEnv
+        }
+
+        // 行数据换颜色
+        function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+            try {
+                var div = document.getElementById(DivId);
+                if (div != null) //找到对象了
+                {
+                    var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                    if (trs != null && trs.length > 0) {
+                        trs[RowIndex].style.color = Color;//字体颜色 
+                    }
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+        }
+
+        let kLineTableModelConfig = {
+            elem: '#KlineTable',
+            id: 'dayReload',
+            page: true,
+            sort: true,
+            autoSort: false,
+            where: table_query_config,
+            size: 0,
+            url: setter.djangoAPI + 'dayKline/',
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'stat_day', title: '日期', align: 'left', sort: true},
+                {
+                    field: 'stat_day', title: '星期', templet: function (d) {
+                        let weekday_to_string_array = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+                        let date = new Date(d.stat_day);
+                        return weekday_to_string_array[date.getDay()];
+
+                    }, width: 100
+                },
+
+                {field: 'code', title: '代码', align: 'left'},
+                {field: 'stock_name', title: '名称', align: 'left'},
+                {field: 'open', title: '开盘价', align: 'left', sort: true},
+                {field: 'close', title: '收盘价', align: 'left', sort: true},
+                {field: 'high', title: '最高价', align: 'left', sort: true},
+                {field: 'low', title: '最低价', align: 'left', sort: true},
+                {field: 'change', title: '涨跌额', align: 'left', sort: true},
+                {
+                    field: 'change_rate', title: '涨跌幅', align: 'left', sort: true, templet: function (d) {
+                        return d.change_rate + '%';
+                    }
+                },
+                {field: 'volume', title: "成交量", align: 'left', sort: true},
+                {field: 'turnover', title: '成交额(亿)', align: 'left', sort: true, templet: function (d) {
+                        return d.turnover.slice(0,-2);
+                    }},
+            ]],
+            done: function (res, curr, count) {
+                persons = res.data
+                for (var i = 0; i < persons.length; i++) {
+                    if (persons[i].change_rate > 0)
+                        Layui_SetDataTableRowColor('KlineTable', i, '#f54545');
+                    else
+                        Layui_SetDataTableRowColor('KlineTable', i, '#0f990f');
+                }
+            }
+        };
+        // simulate data;
+        let card_where_config = {
+            // code: "US.AAPL",
+            month: new Date().toISOString().slice(0, 7),
+            token: setter.getToken(),
+            TrdEnv:setter.TrdEnv
+        };
+        let cardSetting = {
+            elem: '#klineCard',
+            id: 'cardReload',
+            templet: '#klineCardItem',
+            url: setter.djangoAPI + "cardKline/",
+            where: card_where_config,
+            page: {limit: 3 * 7, limits: [8, 16, 24, 32, 40]},
+            done: function (dataList, curr, count) {
+                let all_list = $('.application-list-item');
+                $.each(all_list, function (index, dom) {
+                    let item = $(dom);
+                    let date_text = item.find('h1').text()
+                    if (date_text === "") {
+                        item.hide();
+                    }
+                })
+            }
+        }
+
+
+        // personalize collective
+        // input code name for query
+        // listen search input code event
+
+        let $repeat = 0; // modify time
+        let $timeout = undefined;
+        // listen search input code event
+        $('#conditionInput').bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        })
+
+        $("#conditionCodeSelect").click(function (event) {
+            let code_name = event.target.innerText;
+            let code = code_name.split(' ')[0]
+            $("#conditionInput").val(code);
+        });
+
+
+        // get_search_stock_name('')
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value, limit: 15,
+                page: 1,
+                TrdEnv:setter.TrdEnv,
+                token:setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#conditionMenu')
+                    $('#conditionCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] +' '+ data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                }
+            })
+        }
+
+        // 本页面首次加载
+        function get_search_stock_name_first(input) {
+            let value = input.value;
+            console.log(value)
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value,
+                limit: 15,
+                page: 1,
+                TrdEnv:setter.TrdEnv,
+                token:setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#conditionMenu')
+                    $('#conditionCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] +' '+ data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                    $('#conditionInput').val(data[0][0]);
+
+                    date.render({
+                        elem: '#dateChange1',
+                        value: getPreMonth(new Date())
+                    })
+                    date.render({
+                        elem: '#dateChange2',
+                        value: new Date()
+
+                    })
+                    date.render({
+                        elem: '#dateChange3',
+                        type: "month",
+                        value: new Date().toISOString().slice(0, 7)
+                    })
+                    console.log('页面初始加载')
+
+                    kLineTableModelConfig.where.sd = $('#dateChange1').val();
+                    kLineTableModelConfig.where.ed = $('#dateChange2').val();
+                    table.render(kLineTableModelConfig);
+                    cardSetting.where.code = data[0][0]
+                    cardSetting.where.month = $('#dateChange3').val();
+                    dataGrid.render(cardSetting)
+                }
+            })
+        }
+
+        // 其他页面的日k跳转 加载
+        function jump_for_daykline_btn(data) {
+            let code = data.code;
+            table_query_config.code = code;
+
+            date.render({
+                elem: '#dateChange1',
+                value: getPreMonth(new Date())
+            })
+            date.render({
+                elem: '#dateChange2',
+                value: new Date()
+
+            })
+            date.render({
+                elem: '#dateChange3',
+                type: "month",
+                value: new Date().toISOString().slice(0, 7)
+            })
+
+            kLineTableModelConfig.where.sd = $('#dateChange1').val();
+            kLineTableModelConfig.where.ed = $('#dateChange2').val();
+            table.render(kLineTableModelConfig);
+            cardSetting.where.code = code
+            cardSetting.where.month = $('#dateChange3').val();
+            dataGrid.render(cardSetting)
+
+            $('#conditionInput').val(code);
+
+
+        }
+
+
+        // 排序工具 改为监听，并reload table
+        table.on('sort(eKlineTable)', function (obj) {
+            table.reload('dayReload', {
+                initSort: obj, where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                    field: obj.field //排序字段   在接口作为参数字段  field order
+                    , order: obj.type //排序方式   在接口作为参数字段  field order
+                }
+            });
+            return false;
+        });
+
+
+        // submit event
+        form.on('submit(eSearch)', function (data) {
+            let code = $('#conditionInput').val();
+            let sd = $('#dateChange1').val();
+            let ed = $('#dateChange2').val();
+            let md = $('#dateChange3').val();
+
+            // checking event
+            let event_text = $("li[class='layui-this']").text();
+            table.reload('dayReload', {
+                where: {'code': code, 'sd': sd, 'ed': ed, 'field': '', 'order': ''},
+                page: {curr: 1},
+                initSort: {
+                    field: 'stat_day' //排序字段，对应 cols 设定的各字段名
+                    , type: 'desc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+                }
+            })
+
+            card_where_config.code = code;
+            card_where_config.month = md;
+            dataGrid.render(cardSetting)
+
+        })
+
+        // table click event
+        $('.layui-tab-title').find("li").click(function (e) {
+            let target = e.target;
+            let event_text = $(target).text();
+            let dateChange1 = $('#dateChange1');
+            let dateChange2 = $('#dateChange2');
+            let dateChange3 = $("#dateChange3");
+
+            if (event_text === "日期模式") {
+                dateChange1.attr('name', 'date');
+                dateChange2.attr('name', 'date');
+                dateChange2.parent().show();
+                dateChange1.parent().show();
+                dateChange3.parent().hide();
+            } else {
+                dateChange2.parent().hide();
+                dateChange1.parent().hide();
+                dateChange3.parent().show();
+                dateChange3.parent().removeClass("layui-hide");
+
+
+            }
+        })
+
+
+        // $('#conditionInput').bind('click', function () {
+        //     get_search_stock_name_first({'value':''});
+        // })
+
+        const search_code = location.search;
+        const code_reg = /code\s*=\s*(\S+\.?\S+)&?/i;
+
+        function tags_reload() {
+            if (code_reg.test(search_code)) {
+                const code = code_reg.exec(search_code)[1];
+                // use code to request
+
+                $('#conditionInput').val(code);
+                const origin_url = location.host + location.pathname + "#/kLine/k_line";
+                history.pushState({url: origin_url, title: ""}, document.title, location.pathname + "#/data/order")
+                $('#search').click();
+                table_query_config.code = code;
+            }
+        }
+
+        setTimeout(tags_reload, 5e2);
+        // other page go to here;
+        if (window.data) {
+            console.log('跳转过来的日k')
+            jump_for_daykline_btn(data)
+        } else {
+            console.log('非跳转')
+            get_search_stock_name_first({'value': ''});
+        }
+
+    })
+</script>

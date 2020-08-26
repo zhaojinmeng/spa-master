@@ -1,0 +1,2045 @@
+<style>
+    .layui-form-switch {
+        margin-right: 50px;
+    }
+
+    span {
+        padding-right: 7px;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .green {
+        color: green;
+    }
+
+    .time_format {
+        float: left;
+        width: 25%;
+
+    }
+
+    [lay-id="ReloadDetail"] .layui-table-cell {
+        font-size: 14px;
+        padding: 0 5px;
+        height: auto;
+        overflow: visible;
+        text-overflow: inherit;
+        white-space: normal;
+        word-break: break-all;
+    }
+</style>
+<script class="modifyCodeForm" type="text/html" id="modifyOrder">
+    <form class="layui-form model-form" lay-filter="eStockTrade">
+        <div class="layui-form-item">
+            <label class="layui-form-label">股票代码</label>
+            <div class="layui-input-block">
+                <input class="layui-input" name="code" type="text" value="" disabled autocomplete="off">
+            </div>
+
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">股票价格</label>
+            <div class="layui-input-block">
+
+                <input class="layui-input" name="price" type="number" step="0.1" min="0" value=""
+                       lay-verify="number" autocomplete="off">
+
+            </div>
+        </div>
+
+        <div id="marketPrice" class="layui-form-item" hidden>
+            <label class="layui-form-label">实时价格</label>
+            <div class="layui-input-block layui-text market">
+                                <span class="layui-input-inline" id="stockPrice">0.00 <strong
+                                        id="stockRatio">0.00%</strong></span>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">股票数量</label>
+            <div class="layui-input-block">
+
+                <input type="number" class="layui-input" name="qty" min="0" step="100" value=""
+                       lay-verify="number" autocomplete="off">
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">总金额</label>
+            <div class="layui-input-block">
+
+                <span class="layui-input-inline" style="padding: 10px 0;" id="money_1">请输入股票数量和价格</span>
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">仓位选择</label>
+            <div class="layui-input-block" style="white-space: nowrap;">
+                <input type="checkbox" lay-filter="position" title="全仓" style="margin-right: 15px"
+                       name="invest[full]"
+                >
+                <input type="checkbox" lay-filter="position" title="半仓" name="invest[half]">
+                <input type="checkbox" lay-filter="position" title="1/3仓" class="layui-input-block"
+                       name="invest[third]">
+                <input type="checkbox" lay-filter="position" class="layui-input-block" title="1/4仓"
+                       name="invest[quarter]">
+            </div>
+            <!--            <div class="layui-input-block">-->
+            <!--                <input type="checkbox" lay-filter="position" title="1/3仓" class="layui-input-block"-->
+            <!--                       name="invest[third]">-->
+            <!--                <input type="checkbox" lay-filter="position" class="layui-input-block" title="1/4仓"-->
+            <!--                       name="invest[quarter]">-->
+            <!--            </div>-->
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="submit" lay-filter="mOrderSubmit" lay-submit>保存</button>
+                <button class="layui-btn" type="reset" ew-event="closeDialog" id="eRestBtn">取消</button>
+            </div>
+
+        </div>
+    </form>
+</script>
+
+<script class="modifyCodeForm" type="text/html" id="tradeDetail">
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+
+            <table id="dataTable" lay-filter="tbBasicTable" style="white-space: nowrap;"></table>
+        </div>
+    </div>
+</script>
+
+<input type=text style="display:none" id="can_sell" value="">
+<input type=text style="display:none" id="max_buy" value="">
+<input type=text style="display:none" id="lot_size" value="">
+<input type=text style="display:none" id="first_price" value="">
+<input type=text style="display:none" id="power" value="">
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格顶部工具栏 -->
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">状态:</label>
+                        <div class="layui-input-inline">
+                            <select name="status" lay-verType="message"
+                                    required>
+                                <option value="">选择状态</option>
+                                <option value="等待执行">等待执行</option>
+                                <option value="执行成功">执行成功</option>
+                                <option value="过期失效">过期失效</option>
+                                <option value="运行中">运行中</option>
+                                <option value="手动取消">手动取消</option>
+                                <option value="订单交易过期">订单交易过期</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">股票选择:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" style="width: 135px;" id="conditionMenu1">
+                                <input type="text" placeholder="" class="layui-input" name="word_or_name"
+                                       id="stockInput" autocomplete="off">
+                                <ul class="dropdown-menu-nav" id="conditionCodeSelect1">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">创建时间:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name='date' id="dateChange"
+                                   autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="eSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                        <button class="layui-btn icon-btn" id="eConditionAddBtn" type="button">
+                            <i class="layui-icon">&#xe654;</i>添加
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <table id="eConditionTable" lay-filter="eConditionTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="eConditionTbBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="eConditionEditDialog">
+    <form id="eConditionEditForm" lay-filter="eConditionEditForm"
+          class="layui-form model-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">条件名称:</label>
+            <div class="layui-input-block">
+                <input type="text" name="o_name" id="o_name"
+                       class="layui-input" placeholder="请输入条件名称" maxlength="20" autocomplete="off">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">
+                选择股票:
+            </label>
+            <div class="layui-input-block">
+                <div class="layui-inline" style="width: 100%">
+                    <div class="dropdown-menu" id="conditionMenu" style="width: 100%">
+
+                        <input name="code" id="conditionInput" lay-verType="message"
+                               lay-verify="required" class="layui-input" placholder="请输入股票代码" type="text"
+                               autocomplete="off"
+                               required style="width: 25%;float: left;">
+                        <label class="layui-form-label layui-form-required" style="padding: 9px 10px;">
+                            股票名称:
+                        </label>
+                        <input name="stock_name" id="stockName"
+                               style="display: inline;float:left;width: 25%"
+                               lay-verType="message" class="layui-input"/>
+
+                        <label class="layui-form-label layui-form-required"
+                               style="padding: 9px 0;width: 10%">类型:</label>
+                        <div class="layui-input-block">
+                            <p type="text" class="layui-form-label" style="text-align: left;padding-left: 10px;"
+                               name="condition_class"
+                               value="正股"
+                               lay-text="正股|期权" lay-skin="switch" checked readonly>正股</p>
+
+                        </div>
+
+                        <ul class="dropdown-menu-nav" id="conditionCodeSelect" style=""></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label layui-form-required">开盘时间:</label>-->
+        <!--            <div class="layui-input-block" id="selectOpenTime">-->
+        <!--                <p class="layui-text" style="padding: 9px 15px;line-height: 20px">请先选择股票代码</p>-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">失效时间:</label>
+            <div class="layui-input-block" id="selectCloseTime">
+                <p class="layui-text" style="padding: 9px 15px;line-height: 20px">请先选择股票代码</p>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="position: relative;">
+            <label class="layui-form-label">
+                <button class="layui-btn layui-btn-sm icon-btn" id="eAddBtnComment"
+                        style="" type="button">
+                    <i class="layui-icon">&#xe654;</i>添加策略
+                </button>
+            </label>
+            <div class="layui-input-block">
+                <table id="formSSXMTable" lay-filter="formSSXMTable"></table>
+            </div>
+
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">操作方向</label>
+            <div class="layui-input-block">
+                <input type="radio" name="direction" value="0" title="买入(做多)" checked lay-filter="radio_t">
+                <input type="radio" name="direction" value="1" title="卖出(做空)" lay-filter="radio_t">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">价格</label>
+            <div class="layui-input-block">
+                <input type="number" class="layui-input" id="price" style="display: inline-block;width: 150px"
+                       name="open_price" autocomplete="off"
+                       placeholder="开仓价格" min="0" lay-verType="msg"
+                       lay-verify="price\number"
+                       style="width: 160px">
+
+                <div class="layui-inline" style="margin: 10px;padding: 0px;">
+                    <input type="checkbox" name="market_price" title="市价" lay-skin="primary" checked>
+                    <input type="checkbox" name="auto_price" title="撮合价格" lay-skin="primary" checked>
+
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <div>
+                <label class="layui-form-label">实时价格</label>
+                <div style="padding: 9px 0"
+                     id="stockDetails" class="layui-input-block layui-text">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item ">
+            <label class="layui-form-label layui-form-required">数量:</label>
+            <div class="layui-input-block">
+                <input type="number" name="stock_numbers" id="stockNumber" placeholder="股票数量" min="0"
+                       class="layui-input layui-input-inline">
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">仓位选择</label>
+            <div class="layui-input-block" style="white-space: nowrap;">
+                <input type="checkbox" lay-filter="position" title="全仓" style="margin-right: 15px"
+                       name="invest[full]">
+                <input type="checkbox" lay-filter="position" title="半仓" name="invest[half]">
+                <input type="checkbox" lay-filter="position" title="1/3仓" class="layui-input-block"
+                       name="invest[third]">
+                <input type="checkbox" lay-filter="position" class="layui-input-block" title="1/4仓"
+                       name="invest[quarter]">
+            </div>
+
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">金额:</label>
+            <div class="layui-input-block">
+                <span type="number" id="money" style="padding-top: 8px;font-size: 18px;display: block"
+                      class="layui-input-inline"
+                      placeholder="请输入价格和数量"></span>
+
+            </div>
+        </div>
+
+
+        <div class="layui-form-item text-right">
+
+
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <button class="layui-btn" type="submit" lay-filter="eConditionSubmit" lay-submit>保存</button>
+        </div>
+
+
+    </form>
+</script>
+<!--child form show -->
+<script type="text/html" id="eConditionChildEditDialog">
+    <form id="eConditionChildForm" lay-filter="eConditionChildForm" class="layui-form model-form">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">策略名称:</label>
+            <div class="layui-input-block">
+
+                <input name="aItem" id="aItemCascade" lay-verType="message"
+                       lay-verify="required" required>
+
+
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">选项:</label>
+            <div class="layui-input-block">
+
+                <input name="bItem" id="bItemCascade" lay-verType="message"
+                       lay-verify="required" required>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">选项:</label>
+            <div class="layui-input-block">
+
+                <input name="cItem" id="cItemCascade" l lay-verType="message">
+
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">数值:</label>
+            <div class="layui-input-block">
+                <input name="itemValue" id="itemValue" lay-filter="itemValue" placeholder="请输数值" type="number"
+                       class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" id="childItemCancel">取消</button>
+            <button class="layui-btn" lay-filter="eChildConditionSubmit" lay-submit>保存</button>
+        </div>
+    </form>
+</script>
+<!--modify button-->
+<script type="text/html" id="modifyBar">
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="modify">修改</button>
+</script>
+<!--log button-->
+<script type="text/html" id="logBar">
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="log">日志</button>
+</script>
+<!--delete button-->
+<script type="text/html" id="deleteBar">
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-red" lay-event="delete">删除</button>
+</script>
+
+<!--log dialog-->
+<script type="text/html" id="logDialog">
+    <button type="button" class="layui-btn layui-btn-normal" onclick="updateLog()">刷新</button>
+    <table id="eLogTable" lay-filter="eLogTable"></table>
+</script>
+<!--time form items-->
+
+<!--cancel order tmplate-->
+<script type="text/html" id="cancelOrderButton">
+    {{# if(d.order_status=='全部已成'){ }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">撤单</button>
+    {{# } else if(d.order_status=='全部已撤单') { }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">撤单</button>
+    {{# }else{ }}
+    <button type="button" class="layui-btn layui-btn-xs" id="orderCancel" lay-event="cancel">撤单</button>
+    {{# }; }}
+</script>
+
+<!--modify order template-->
+<script type="text/html" id="modifyOrderButton">
+    {{# if(d.order_status=='全部已成'){ }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">改单</button>
+    {{# } else if(d.order_status=='全部已撤单') { }}
+    <button type="button" class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="">改单</button>
+    {{# }else{ }}
+    <button type="button" class="layui-btn layui-btn-xs" lay-event="modifyOrder">改单</button>
+    {{# };}}
+</script>
+
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'setter', 'admin', 'cascader', 'dropdown', 'laydate', 'laytpl'], function () {
+            let $ = layui.jquery;
+            let layer = layui.layer;
+            let form = layui.form;
+            let table = layui.table;
+            let util = layui.util;
+            let admin = layui.admin;
+            let date = layui.laydate;
+            let setter = layui.setter;
+            let dropdown = layui.dropdown;
+            let cascader = layui.cascader;
+            var laytpl = layui.laytpl
+            setter.baseServer = '';
+
+            // toolbar event listen
+            form.render();
+            date.render({
+                elem: '#dateChange',
+                value: new Date()
+            })
+
+            // 仓位
+            function render_checkbox(data) {
+                let all_size = data.max_buy ? data.max_buy : data.qty;
+                let all_box = $('input[name = "invest[full]"]');
+                let half_box = $('input[name = "invest[half]"]');
+                let third_box = $('input[name = "invest[third]"]');
+                let quarter_box = $('input[name = "invest[quarter]"]');
+                let size = $('#lot_size').val()
+
+                all_box.attr('title', "全仓|" + all_size);
+                half_box.attr("title", "半仓|" + Math.floor(all_size / 2 / size) * size);
+                third_box.attr('title', "1/3仓|" + Math.floor(all_size / 3 / size) * size);
+                quarter_box.attr('title', "1/4仓|" + Math.floor(all_size / 4 / size) * size);
+
+                let all_check_position = $("input[lay-filter=\"position\"]");
+                $.each(all_check_position, function (index, dom) {
+                    let v = parseFloat($(dom)[0].title.split('|')[1])
+                    if (v < 1) {
+                        $(dom).prop('disabled', true);
+                        $(dom).next().addClass('layui-btn-disabled');
+                    } else {
+                        $(dom).prop('disabled', false);
+                        $(dom).next().addClass('layui-btn-enabled');
+                    }
+                })
+                form.render('checkbox');
+
+            }
+
+            // // 日志的实时刷新, 不使用 太恶心
+            updateLog = function () {
+                table.reload('Reload');
+                return false;
+            }
+
+            // 打开对应订单
+            const table_config = {
+                elem: '#dataTable',
+                id: 'ReloadDetail',
+                url: setter.djangoAPI + "tradeDetail/?st=&et=",
+                where: {
+                    'token': setter.getToken(),
+                    TrdEnv: setter.TrdEnv
+                },
+
+                cellMinWidth: 100,
+                cols: [[
+                    // {field: 'trade_type', title: '类型', width: "50", align: 'left' },
+                    // {field: 'code', title: '代码', align: 'left'},
+                    // {field: 'stock_name', title: '名称', align: 'left'},
+                    // {field: 'trade_object', title: '交易对象', width: "80", align: 'left'},
+                    {field: 'trd_side', title: '交易类型', width: "80", align: 'left'},
+                    {field: 'order_status', title: '交易状态', width: "120", align: 'left'},
+                    {field: 'qty', title: '数量', align: "left"},
+                    {field: 'price', title: '价格', align: 'left'},
+                    {field: 'sum', title: '金额', align: 'left'},
+                    {field: 'create_time', title: '下单时间', width: "180", align: 'left'},
+                    {field: 'updated_time', title: '更新时间', width: "180", align: 'left'},
+                    {title: '撤单', toolbar: '#cancelOrderButton', width: "60", align: 'left'},
+                    {title: '改单', toolbar: '#modifyOrderButton', width: "60", align: 'left'}
+
+                ]],
+            };
+
+
+            table.on('tool(eConditionTable)', function (obj) {
+                let event = obj.event;
+                let data = obj.data;
+                switch (event) {
+                    case "modify":
+                        // displays the edit dialog.lay-event="modify"
+                        showEditModel(data);
+                        // modify
+                        break;
+                    case "log":
+                        // look log
+                        let log_config = {
+                            elem: '#eLogTable',
+                            id: 'Reload',
+                            url: setter.djangoAPI + 'getOptionLog/',
+                            where: {
+                                'O_name': data['o_name'],
+                                'token': setter.getToken(),
+                                TrdEnv: setter.TrdEnv
+                            },
+                            page: true,
+                            height: '470px;',
+                            cellMinWidth: 100,
+                            limit: 10,
+                            cols: [[
+                                {type: 'numbers'},
+                                {
+                                    field: 'logtime',
+                                    title: '时间',
+                                    minWidth: 100,
+                                    width: 200,
+                                    sort: true,
+                                    templet: function (d) {
+                                        return d.logtime.slice(0, 19);
+                                    }
+                                },
+                                {field: 'logprice', title: '价格', minWidth: 80, width: 100, sort: true},
+                                {field: 'logstr', title: '日志', minWidth: 100, sort: true},
+                            ]],
+                            size: ''
+                        };
+
+
+                        // let setInterval_func = '';
+                        admin.open({
+                                type: 0,
+                                title: '日志',
+                                area: '850px',
+                                content: $('#logDialog').html(),
+                                success: function (layero, dIndex) {
+                                    table.render(log_config);
+                                    // setInterval_func = setInterval(update_log, 1e3 * 2);
+                                },
+
+                                cancel: function () {
+                                    admin.closeAllTabs();
+                                    // clearInterval(setInterval_func);  // 关掉定时器
+                                }
+                            }
+                        )
+                        break
+                    case 'delete':
+                        // delete item
+                        layer.confirm('真的要删除吗?', function (index) {
+                            obj.del();
+                            let ajax_parameter = {
+                                url: setter.djangoAPI + 'delOption/',
+                                data: {o_name: data.o_name, 'token': setter.getToken(), TrdEnv: setter.TrdEnv},
+                                type: 'POST',
+                                success: function (result, status, xhr) {
+                                    layer.msg(result.msg);
+                                }
+                            }
+                            admin.ajax(ajax_parameter)
+
+                            layer.close(index);
+
+                        })
+                        break
+                    case 'orderStatus':
+                        console.log('点击状态', obj.data)
+                        const O_name = obj.data.o_name;
+                        const code = obj.data.code;
+                        let orderID = '';
+                        let Type = undefined;
+                        if (code.includes('HK.')) {
+                            Type = 1;
+                        } else if (code.includes('US.')) {
+                            Type = 2;
+                        } else {
+                            Type = 3;
+                        }
+                        // 根据条件名请求订单信息
+                        admin.ajax({
+                            url: setter.djangoAPI + 'getOrderDetail/',
+                            data: {'o_name': O_name, 'code': code, 'token': setter.getToken(), TrdEnv: setter.TrdEnv},
+                            type: 'GET',
+                            async: false,
+                            success: function (result, status, xhr) {
+                                orderID = result.data.orderID;
+                            }
+                        })
+                        console.log(table_config)
+
+
+                        let content = $('#tradeDetail');
+                        admin.open({
+                            title: "订单信息",
+                            area: ["", ""],
+                            // offset: 'auto',
+                            offset: ['40%', "30%"], shade: false,
+                            content: content.html(), type: 1,
+                            success: function (layero, dIndex) {
+                                table_config.where.Type = Type;
+                                table_config.where.code = code;
+                                table_config.where.orderID = orderID;
+
+                                table.render(table_config);
+
+                                table.on('tool(tbBasicTable)', function (obj) {
+                                    if (obj.event === "cancel") {
+                                        layer.confirm('真的要撤单吗?', function (index) {
+                                            let ajax_parameter = {
+                                                url: setter.djangoAPI + 'cancelOrder/',
+                                                data: {
+                                                    orderID: orderID,
+                                                    code: code,
+                                                    o_name: O_name,
+                                                    'token': setter.getToken(),
+                                                    TrdEnv: setter.TrdEnv
+                                                },
+                                                type: 'POST',
+                                                async: false,
+                                                success: function (result, status, xhr) {
+                                                    layer.msg(result.msg);
+                                                    // table.reload("ReloadDetail");
+                                                    table.reload('mainTable')
+                                                    admin.btnLoading("#orderCacel", false);
+                                                }
+                                            }
+                                            console.log('撤单完成')
+                                            admin.ajax(ajax_parameter);
+                                            admin.btnLoading("#orderCancel");
+                                            layer.close(index);
+
+                                        })
+                                    }
+                                    // modify order
+                                    else if (obj.event === "modifyOrder") {
+                                        console.log('点击修改订单')
+                                        let modifycontent = $('#modifyOrder');
+                                        admin.open({
+                                            title: "订单修改",
+                                            area: ["", ""],
+                                            content: modifycontent.html(), type: 1,
+                                            success: function (layero, dIndex) {
+                                                const money = $('#money_1');
+
+                                                function insert_stock_market(stock_code, old_data) {
+                                                    // cancel hidden input
+                                                    $("#marketPrice").removeAttr("hidden");
+
+                                                    // To request market with the stock code;
+
+                                                    admin.req(setter.djangoAPI + "getLastData/", {
+                                                        code: stock_code,
+                                                        TrdEnv: setter.TrdEnv,
+                                                        token: setter.getToken()
+                                                    }, function (res) {
+                                                        if (res.code === 0) {
+                                                            let data = res.data;
+                                                            let price_dom = $('#stockPrice');
+                                                            let rate_dom = $('#stockRatio');
+                                                            $('#lot_size').val(data.lot_size)
+                                                            price_dom.css('padding', '9px 0');
+                                                            price_dom.prop('firstChild').nodeValue = (data.price + " " + data.ud + " ");
+                                                            data.ud.toString().substring(0, 1) == "-" ? (price_dom.removeClass('red'), price_dom.addClass('green'))
+                                                                : (price_dom.removeClass('green'), price_dom.addClass('red'));
+                                                            rate_dom.prop('firstChild').nodeValue = data.udp + "%";
+                                                            // render size of checkbox
+                                                            data.max_buy = Math.floor($('#power').val() / data.price);  // 最大可买原来是直接使用max_buy，现在改为用购买力算
+                                                            render_checkbox(data);
+                                                            // fill value
+                                                            // $('input[name="price"]').val(data.price);
+                                                            $('input[name="qty"]').attr('step', data.lot_size);
+                                                            if (old_data && old_data.qty) {
+                                                                $('input[name="numbers"]').val(data.qty);
+                                                                old_data.qty = data.qty
+                                                                render_checkbox(old_data);
+
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                                let data = obj.data;
+                                                const code = data.code
+                                                form.val("eStockTrade", data);
+
+                                                admin.ajax({
+                                                    url: setter.djangoAPI + 'getAccountPower/?code=' + code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                                                    success: function (res, status, xhr) {
+                                                        let data = res.data[0]
+                                                        $('#power').val(data.power)  // 选中股票，加载购买力
+                                                    }
+                                                });
+
+                                                // 判断改单的方向，赋予仓位对应的值
+                                                if (data.trd_side === '买') {
+                                                    insert_stock_market(code);
+                                                } else {
+                                                    insert_stock_market(code, {'qty': 1});
+                                                }
+                                                const price_dom = $('input[name="price"]');
+                                                const qty_dom = $('input[name="qty"]');
+                                                $('input[name="qty"]').val(data.qty);
+                                                money.text((Number(price_dom.val()) * Number(qty_dom.val())).toFixed(2));
+
+                                                price_dom.bind('input oinput', function () {
+                                                    const value = $('input[name="qty"]').val();
+                                                    if (value && price_dom.val()) money.text((Number(value) * Number(price_dom.val())).toFixed(2));
+                                                    else money.text("");
+                                                    // 价格的变化，在买入的时候会改变仓位的数量
+                                                    if (data.trd_side === '买') {
+                                                        const max_buy = Math.floor($('#power').val() / price_dom.val());
+                                                        render_checkbox({'max_buy': max_buy})
+                                                    }
+
+
+                                                })
+                                                qty_dom.bind('input oinput', function (e) {
+                                                    const price = price_dom.val();
+                                                    if (price && qty_dom.val()) money.text((Number(price) * Number(qty_dom.val())).toFixed(2));
+                                                    else money.text("");
+                                                })
+
+                                                form.on("checkbox(position)", function (res) {
+                                                    let all_check_position = $("input[lay-filter=\"position\"]");
+                                                    let checked = res.elem.checked;
+                                                    $.each(all_check_position, function (index, dom) {
+                                                        $(dom).removeAttr('checked');
+                                                    })
+                                                    if (checked) {
+                                                        $(res.elem).prop("checked", "true");
+                                                        const number = $(res.elem).attr("title").split("|")[1];
+                                                        if (number) {
+                                                            $('input[name="qty"]').val(number);
+                                                            // calculate price
+                                                            money.text((number * $('input[name="price"]').val()).toFixed(2))
+                                                        }
+                                                    } else {
+                                                        const number = $('input[name="qty"]').attr("step")
+                                                        $('input[name="qty"]').val(number);
+                                                        money.text((number * $('input[name="price"]').val()).toFixed(2))
+                                                    }
+                                                    form.render("checkbox");
+                                                })
+
+                                                form.on('submit(mOrderSubmit)', function (data) {
+                                                    // 改单保存 前的数量判断，为0不能提交
+                                                    if ($('input[name="qty"]').val() === '0') {
+                                                        layer.msg('数量不合法')
+                                                    } else {
+                                                        let ajax_parameter = {
+                                                            url: setter.djangoAPI + 'modifyOrder/',
+                                                            data: {
+                                                                orderID: obj.data.order_id,
+                                                                code: obj.data.code,
+                                                                price: data.field.price,
+                                                                num: data.field.qty,
+                                                                'token': setter.getToken(),
+                                                                TrdEnv: setter.TrdEnv
+                                                            },
+                                                            type: 'POST',
+                                                            async: false,
+                                                            success: function (result, status, xhr) {
+                                                                layer.msg(result.msg);
+
+                                                            }
+                                                        }
+                                                        admin.ajax(ajax_parameter)
+                                                        let Type = undefined;
+                                                        if (code.includes('HK.')) {
+                                                            Type = 1;
+                                                        } else if (code.includes('US.')) {
+                                                            Type = 2;
+                                                        } else {
+                                                            Type = 3;
+                                                        }
+                                                        let all_title = $('.layui-tab-title').children();
+                                                        $.each(all_title, function (index, dom) {
+                                                            $(dom).removeClass('layui-this');
+                                                        })
+                                                        let this_style = all_title[Type - 1];
+                                                        $(this_style).addClass('layui-this');
+                                                        layer.close(dIndex);
+                                                        // table.reload('ReloadDetail')
+
+                                                        return false
+                                                    }
+
+                                                });
+                                                $('input[name="qty"]').bind("input oinput", function (res) {
+
+                                                    let all_check_position = $("input[lay-filter=\"position\"]");
+
+                                                    $.each(all_check_position, function (index, dom) {
+                                                        $(dom).removeAttr('checked');
+                                                    })
+                                                    form.render("checkbox");
+
+                                                })
+                                            }
+                                        });
+
+                                    }
+                                })
+                            }
+                        })
+                    default:
+                        return;
+                }
+
+            })
+
+            // 行数据换颜色
+            function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+                try {
+                    var div = document.getElementById(DivId);
+                    if (div != null) //找到对象了
+                    {
+                        var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                        if (trs != null && trs.length > 0) {
+                            trs[RowIndex].style.color = Color;//字体颜色 
+                        }
+                    }
+                } catch (e) {
+                    console.log(e.message);
+                }
+            }
+
+
+            // 渲染表格
+            let insTb = table.render({
+                elem: '#eConditionTable',
+                id: "mainTable",
+                url: setter.djangoAPI + 'getOptionList/?status=&word_or_name=&date=&token=' + setter.getToken(),
+                where: {
+                    TrdEnv: setter.TrdEnv
+                },
+                page: true,
+                // cellMinWidth: 100,
+                cols: [[  // unit_id
+                    {field: 'unit_id', title: 'ID', align: 'left', sort: true, width: '5%'},
+                    {field: 'o_name', title: '条件名称', align: 'left', sort: true, width: '15%'},
+                    {field: 'runstate', title: '状态', align: 'left', sort: true, width: '5%'},
+                    {field: 'createtime', title: '创建时间', align: 'left', sort: true, width: '10%'},
+                    {field: 'failuretime', title: '过期时间', align: 'left', sort: true, width: '10%'},
+                    {field: 'field_type', title: '交易对象', align: 'left', width: '5%'},
+                    {field: 'tradetype', title: '类型', align: 'left', width: '5%'},
+                    {field: 'code', title: '代码', align: 'left', sort: true, width: '10%'},
+                    {field: 'stock_name', title: '名称', align: 'left', sort: true, width: '10%'},
+                    {
+                        field: 'order_status',
+                        title: '订单状态',
+                        align: 'left',
+                        sort: true,
+                        width: '10%',
+                        templet: function (d) {
+                            // return '<a href="#">'+d.order_status+'</a>';
+                            return d.order_status
+                        }
+                    },
+                    {title: '修改', toolbar: '#modifyBar', align: 'left', width: '5%'},
+                    {title: '日志', toolbar: '#logBar', align: 'left', width: '5%'},
+                    {title: '删除', toolbar: '#deleteBar', align: 'left', width: '5%'}
+                ]],
+                done: function (res, curr, count) {
+                    persons = res.data
+                    for (var i = 0; i < persons.length; i++) {
+                        if (persons[i].runstate === '执行成功' || persons[i].runstate === '过期失效' || persons[i].runstate === '手动取消' || persons[i].runstate === '订单交易过期')  //手动取消 订单交易过期
+                            Layui_SetDataTableRowColor('eConditionTable', i, '#bbb');
+                        if (persons[i].order_status !== '未下单') {
+                            var div = document.createElement("a")
+                            let elem = $('tr td[data-field=\'order_status\']').eq(i);
+                            elem.html('')
+                            elem.append('<div class="layui-table-cell laytable-cell-1-0-9">' +
+                                '<span class="icon-text" style=";cursor: pointer;" lay-event="orderStatus">' + persons[i].order_status + '<i class="layui-icon layui-icon-tips"></i> </span>' +
+                                '</div>')
+                            // elem.append('<span class="icon-text" style="color: green;cursor: pointer;padding-left: 5px;" ><a href="#/data/trade_details" target="_self">等待成交</a>><i class="layui-icon layui-icon-tips"></i> </span>')
+                            // elem.appendChild(div)
+                            console.log(elem.text())
+                        }
+                    }
+                }
+
+            })
+
+
+            function showEditModel(expTpe) {
+                // render button
+                function render_button(code) {
+                    let code_map_to_open_time = {
+                        "US": ['16:00', '21:30', '04:00'],
+                        "-": ['16:00', '21:30', '04:00'],
+                        'HK': ['9:00', '9:30', '13:00'],
+                        "SZ": ['9:00', '9:30', '13:00'],
+                        "SH": ['9:00', '9:30', '13:00'],
+                        'OTHER': ['16:00', '21:30', '04:00']
+                    };
+                    let code_map_to_close_time = {
+                        "US": ['04:00', "08:00"],
+                        "-": ['04:00', "08:00"],
+                        "HK": ['16:00'],
+                        "SZ": ["15:00"],
+                        "SH": ["15:00"],
+                        "OTHER": ['15:00']
+                    }
+
+                    // get trade date function
+                    function get_trade_date(time, next_day) {
+                        const day = time.getDay();
+                        let next_date = undefined
+                        // console.log(1);
+                        if (next_day) {
+                            if (day === 5 && code === "US" || [1, 2, 3, 4, 0].includes(day)) {
+                                next_date = new Date(time.getTime() + 24 * 60 * 60 * 1e3)
+                            } else if (day === 5) next_date = new Date(time.getTime() + 2 * 24 * 60 * 60 * 1e3)
+
+                        } else next_date = time
+                        return next_date
+                    }
+
+                    if (code in code_map_to_open_time) {
+                        let open_time_list = code_map_to_open_time[code];
+                        let close_time_list = code_map_to_close_time[code];
+                        $('#selectCloseTime').empty();
+
+                        let now_time = new Date();
+                        now_time = now_time.getHours() > 9 ? now_time.getHours() + ':' + now_time.getMinutes() : '0' + now_time.getHours() + ':' + now_time.getMinutes()
+                        let next_day = false;
+                        let time_value
+                        if (close_time_list.length === 1) {
+                            time_value = close_time_list[0]
+                            now_time >= close_time_list[0] ? next_day = true : "";
+                        } else {
+                            now_time > close_time_list[1] ? (time_value = close_time_list[0], next_day = true) : time_value = close_time_list[1];
+                        }
+                        $.each([0, 1], function (index, close_data) {
+                            let button_box = document.createElement('input');
+                            let label = undefined;
+                            const id = "closeTime" + index
+                            const date_render_config = {
+                                elem: "#" + id,
+                                type: index ? "time" : "date",
+                                value: index ? time_value : get_trade_date(new Date(), next_day),
+                                format: index ? "HH:mm" : "yyyy-MM-dd"
+                            }
+                            button_box.setAttribute('type', 'text');
+                            const time_field = index ? "closeTime" : "closeDate"
+                            button_box.setAttribute('name', time_field);
+                            button_box.setAttribute("id", id);
+                            button_box.setAttribute("class", "layui-input time_format");
+
+                            // button_box.setAttribute('value', close_data)
+                            // button_box.setAttribute('lay-skin', 'switch');
+                            // button_box.setAttribute('lay-text', label + '|' + label);
+                            button_box.style = 'margin-right:10px;'
+                            $('#selectCloseTime').append($(button_box));
+                            date.render(date_render_config)
+
+                        })
+                    }
+                }
+
+                // set trade event
+                let interval_function_id = undefined;
+                let price_span = document.createElement('span');
+                // price_span.innerText = "价格:";
+                let ud_span = document.createElement('span');
+                // ud_span.innerText = "涨跌额:";
+                let udp_span = document.createElement('span');
+                // udp_span.innerText = "涨跌幅:";
+                let lot_size_span = document.createElement('span');
+                // lot_size_span.innerText = "每手份额:"
+                price_span.setAttribute('class', 'layui-text');
+                price_span.style.color = "inherit";
+                ud_span.setAttribute('class', 'layui-text');
+                ud_span.style.color = "inherit";
+                udp_span.setAttribute('class', 'layui-text');
+                udp_span.style.color = "inherit";
+                lot_size_span.setAttribute('class', 'layui-text');
+                lot_size_span.style.color = "inherit";
+                let price_strong = document.createElement('strong');
+                price_span.append(price_strong);
+                let ud_strong = document.createElement('strong');
+                ud_span.append(ud_strong)
+                let udp_strong = document.createElement('strong');
+                udp_span.append(udp_strong)
+                let lot_size_strong = document.createElement('strong');
+                lot_size_span.append(lot_size_strong)
+
+                function set_request_quotes(code, C_M) {
+                    let dom_div = $('#stockDetails');
+                    dom_div.empty();
+                    dom_div.append($(price_span));
+                    dom_div.append($(ud_span));
+                    dom_div.append($(udp_span));
+                    dom_div.append($(lot_size_span));
+                    if (interval_function_id) {
+                        // There is already function running,
+                        clearInterval(interval_function_id);
+                    }
+
+                    function render_checkbox(data) {
+                        let all_size = data.max_buy ? data.max_buy : data.can_sell;
+                        let all_box = $('input[name = "invest[full]"]');
+                        let half_box = $('input[name = "invest[half]"]');
+                        let third_box = $('input[name = "invest[third]"]');
+                        let quarter_box = $('input[name = "invest[quarter]"]');
+                        let size = $('#lot_size').val()
+
+                        all_box.attr('title', "全仓|" + all_size);
+                        half_box.attr("title", "半仓|" + Math.floor(all_size / 2 / size) * size);
+                        third_box.attr('title', "1/3仓|" + Math.floor(all_size / 3 / size) * size);
+                        quarter_box.attr('title', "1/4仓|" + Math.floor(all_size / 4 / size) * size);
+                        form.render('checkbox');
+
+                    }
+
+                    function trade_ajax() {
+                        interval_function_id = setInterval(function () {
+                            let ajax_config = {
+                                url: setter.djangoAPI + 'getLastData/?code=' + code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                                success: function (res, status, xhr) {
+                                    let data = res.data;
+                                    let price = data.price;
+                                    let ud = data.ud;
+                                    let udp = data.udp;
+                                    let size = data.lot_size;
+                                    const if_rise = data.ud.toString().substring(0, 1) !== "-";
+                                    if (C_M !== 'modify') {
+                                        // $('input[name="open_price"]').val(data.price);
+                                        // $('input[name="stock_numbers"]').val(data.lot_size);  // 数量不能被更新
+                                        let money = price * $('input[name="stock_numbers"]').val()
+                                        // 如果是期权，money，默认要*100
+                                        let conditon_class = $('p[name="condition_class"]').text()
+                                        if (conditon_class === '期权')
+                                            money = money * 100
+                                        // $('#money').text(money.toFixed(2));
+                                    }
+
+
+                                    if_rise ? dom_div.removeClass('green').addClass('red') : dom_div.removeClass("red").addClass("green")
+
+                                    price_strong.innerText = price;
+                                    ud_strong.innerText = ud;
+                                    udp_strong.innerText = udp + "%";
+                                    lot_size_strong.innerText = size;
+
+
+                                }
+                            }
+                            admin.ajax(ajax_config);
+                        }, 1e3 * 30)
+                    }
+
+                    let ajax_config = {
+                        url: setter.djangoAPI + 'getLastData/?code=' + code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                        success: function (res, status, xhr) {
+                            let data = res.data;
+                            let price = data.price;
+                            let ud = data.ud;
+                            const if_rise = data.ud.toString().substring(0, 1) !== "-";
+                            let udp = data.udp;
+                            let size = data.lot_size;
+                            // only first to request to fill value in the price input.
+                            let money = price * size
+                            // 如果是期权，money，默认要*100
+                            let conditon_class = $('p[name="condition_class"]').text()
+                            if (conditon_class === '期权')
+                                money = money * 100
+
+                            if (C_M !== 'modify') {
+                                $('input[name="open_price"]').val(data.price);
+                                $('input[name="stock_numbers"]').val(data.lot_size);
+                                $('#money').text(money.toFixed(2));
+                            }
+                            $('input[name="stock_numbers"]').attr('step', data.lot_size);
+                            $('input[name="open_price"]').attr('step', data.step);
+                            $('#can_sell').val(data.can_sell)
+                            $('#max_buy').val(data.max_buy)
+                            $('#lot_size').val(data.lot_size)
+                            $('#first_price').val(data.price)
+
+                            // set ro red or green color.
+                            if_rise ? dom_div.removeClass('green').addClass('red') : dom_div.removeClass("red").addClass("green")
+                            price_strong.innerText = price;
+                            ud_strong.innerText = ud;
+                            udp_strong.innerText = udp + "%";
+                            lot_size_strong.innerText = size;
+                            let bs = $("input[lay-filter=\"radio_t\"]:checked").val()  // 判断是买入买时卖出
+                            if (bs === '1') {
+                                delete data.max_buy  // 如果是卖出，则删掉max_buy, 使仓位计算用can_sell
+                            }
+                            data.max_buy = Math.floor($('#power').val() / data.price);  // 最大可买原来是直接使用max_buy，现在改为用购买力算
+                            render_checkbox(data);
+                            trade_ajax();
+
+
+                        }
+                    }
+                    let ajax_config_power = {
+                        url: setter.djangoAPI + 'getAccountPower/?code=' + code + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                        success: function (res, status, xhr) {
+                            let data = res.data[0]
+                            $('#power').val(data.power)  // 选中股票，加载购买力
+                        }
+                    }
+
+                    admin.ajax(ajax_config_power);
+                    admin.ajax(ajax_config);
+                    // trade_ajax();
+
+                }
+
+                admin.open({
+                        type: 1,
+                        offset: '0px',
+                        area: '700px',
+                        title: (expTpe ? '修改' : '添加') + '条件',
+                        content: $('#eConditionEditDialog').html(),
+                        success: function (layero, dIndex) {
+                            // 这两种状态 不能提交修改
+                            if (expTpe && (expTpe.runstate === '执行成功' || expTpe.runstate === '过期失效')) {
+                                $("button[lay-filter=\"eConditionSubmit\"]").addClass('layui-btn-disabled');
+                            }
+                            const curr_page = $(".layui-laypage-em").next().html();  // 当前页码
+
+                            // form submit
+                            form.on('submit(eConditionSubmit)', function (data) {
+
+                                // added new condition item
+                                if (projectDataList.length <= 0) {
+                                    layer.tips('请添加策略', '#eAddBtnComment', {tips: [1, '#ff4c4c']});
+                                    return false;
+                                }
+                                // 数量不合法
+                                if ($('#stockNumber').val() === '0') {
+                                    layer.tips('数量不合法', '#stockNumber', {tips: [1, '#ff4c4c']});
+                                    return false;
+                                }
+                                // 条件名是否存在 oname_ifexist
+                                var ifexist_oname = '0';
+                                let oname_ifexist = {
+                                    url: setter.djangoAPI + 'oname_ifexist/?token=' + setter.getToken() + '&TrdEnv=' + setter.TrdEnv,
+                                    data: {o_name: data.field.o_name, 'token': setter.getToken(), TrdEnv: setter.TrdEnv},
+                                    type: 'GET',
+                                    async: false,
+                                    success: function (result, status, xhr) {
+                                        if (result.code === -1) {
+                                            ifexist_oname = '-1';
+                                        }
+                                    }
+                                }
+                                if (expTpe) {  // 修改，不用判断条件名是否存在
+
+                                } else {
+                                    admin.ajax(oname_ifexist)
+                                    if (ifexist_oname === '-1') {
+                                        layer.tips('条件名已存在', '#o_name', {tips: [1, '#ff4c4c']});
+                                        return false;
+                                    }
+                                }
+
+
+                                let nList = admin.util.deepClone(projectDataList);
+                                data.field.itemList = JSON.stringify(nList);
+                                data.field.money = $('#money').text();
+
+                                // let startTimeCheckBox = $('input[name="openTime"]');
+                                // let endTimeCheckBox = $('input[name="closeTime"]');
+                                // let start_value = [];
+                                // let end_value = [];
+                                // for (let i in startTimeCheckBox) {
+                                //     if (startTimeCheckBox[i].checked) start_value.push(startTimeCheckBox[i].value);
+                                // }
+                                // for (let i in endTimeCheckBox) {
+                                //     if (endTimeCheckBox[i].checked) end_value.push(endTimeCheckBox[i].value);
+                                // }
+                                // data.field.openTime = '[' + start_value.toString() + ']';
+                                // data.field.closeTime = '[' + end_value.toString() + ']';
+                                data.field.token = setter.getToken();
+                                data.field.TrdEnv = setter.TrdEnv;
+                                admin.btnLoading("[lay-filter=\"eConditionSubmit\"]");
+                                $.post(setter.djangoAPI + "createOption/", data.field, function (res) {
+                                    if (res.code === 0) {
+                                        layer.close(dIndex);
+                                        // insTb.reload({page: {curr: 1}});
+                                        admin.btnLoading("[lay-filter=\"eConditionSubmit\"]", false);
+                                        table.reload("mainTable",);
+                                        layer.msg(res.msg, {icon: 1});
+                                    }
+                                }, 'json')
+
+                                return false;
+                            })
+                            form.on("checkbox(position)", function (res) {
+                                let all_check_position = $("input[lay-filter=\"position\"]");
+                                let checked = res.elem.checked;
+                                $.each(all_check_position, function (index, dom) {
+                                    $(dom).removeAttr('checked');
+                                })
+                                if (checked) {
+                                    $(res.elem).prop("checked", "true");
+                                    const number = $(res.elem).attr("title").split("|")[1];
+                                    if (number) {
+                                        $('input[name="stock_numbers"]').val(number);
+                                        // calculate price
+                                        let money = (number * $('#price').val());
+                                        // 如果是期权，money，默认要*100
+                                        let conditon_class = $('p[name="condition_class"]').text()
+                                        if (conditon_class === '期权')
+                                            money = money * 100
+                                        $('#money').text(money.toFixed(2))
+
+                                    }
+
+                                } else {
+                                    const number = $('input[name="stock_numbers"]').attr("step")
+                                    $('input[name="stock_numbers"]').val(number);
+                                    let money = (number * $('input[name="open_price"]').val());
+                                    // 如果是期权，money，默认要*100
+                                    let conditon_class = $('p[name="condition_class"]').text()
+                                    if (conditon_class === '期权')
+                                        money = money * 100
+                                    $('#money').text(money.toFixed(2))
+                                }
+                                form.render("checkbox");
+                            })
+                            // numbers event
+                            $('#stockNumber').bind('input oinput', function (res) {
+                                let all_check_position = $("input[lay-filter=\"position\"]");
+
+                                $.each(all_check_position, function (index, dom) {
+                                    $(dom).removeAttr('checked');
+                                })
+                                form.render("checkbox");
+                            })
+                            let isAdd = expTpe ? false : true;
+                            let projectDataList = [];
+
+                            let tbOptions = {
+                                elem: '#formSSXMTable',
+                                data: projectDataList,
+                                page: true,
+                                height: '250px;',
+                                width: '800px',
+                                cellMinWidth: 100,
+                                cols: [[
+                                    {type: 'numbers'},
+                                    {field: 'aItem', title: '策略名称'},
+                                    {field: 'bItem', title: '选项1'},
+                                    {field: 'cItem', title: '选项2'},
+                                    {field: 'itemValue', title: '选择数值', sort: true},
+                                    {
+                                        align: 'left', title: '操作',
+                                        toolbar: '#eConditionTbBar', minWidth: 120, width: 120
+                                    }
+                                ]],
+                                done: function () {
+                                    $(layero).find('.layui-table-view').css('margin', '0');
+                                },
+                                size: ''
+                            };
+
+                            // if not add to request child table data
+                            if (isAdd) { // not to do everything,only to render input.
+                                form.render("checkbox");
+                                form.render('radio');
+                            } else {
+                                // 修改的时候 条件名 和股票下拉框都不能使用
+                                $('#o_name').attr('disabled', true);
+                                $('#conditionInput').attr('disabled', true);
+
+
+                                // initialization default variable for modification button.
+                                let history_data = undefined;
+                                tbOptions.data = undefined;
+                                tbOptions.url = setter.djangoAPI + "getOptionDetail/?o_name=" + expTpe.o_name + '&token=' + setter.getToken() + '&TrdEnv=' + setter.TrdEnv;
+                                tbOptions.parseData = function (res) {
+                                    const item_data = res.data.itemList;
+                                    history_data = res.data;
+                                    return {
+                                        code: res.code,
+                                        'msg': res.msg,
+                                        count: res.count,
+                                        data: JSON.parse(item_data)
+                                    };
+
+                                }
+
+                                tbOptions.done = function (res) {
+                                    if (history_data) {
+                                        console.log(history_data)
+                                        let stock_number = history_data.stock_numbers[0];
+
+                                        let price = history_data.open_price[0];
+                                        $('input[name="open_price"]').val(price);
+                                        $('input[name="stock_numbers"]').attr('step', stock_number);
+                                        $('input[name="stock_numbers"]').val(stock_number);
+                                        let money = price * stock_number;
+                                        // 如果是期权，money，默认要*100
+                                        let conditon_class = $('p[name="condition_class"]').text()
+                                        if (conditon_class === '期权')
+                                            money = money * 100
+                                        $('#money').text(money.toFixed(2));
+                                        // initialization child item
+                                        projectDataList = []
+                                        // open and close time
+                                        $.each(res.data, function (index, data) {
+                                            projectDataList.push(data);
+                                        })
+                                        // 买入卖出按钮回显
+                                        if (history_data.direction[0] === '1') {
+                                            let sell_radio = $('input[name="direction"][value="1"]');
+                                            sell_radio.prop("checked", true);
+                                        }
+
+                                        // 失效时间回显
+                                        let closeTime = history_data.closeTime[0];
+                                        let closeDate = history_data.closeDate[0];
+                                        $('#closeTime0').val(closeDate);
+                                        $('#closeTime1').val(closeTime);
+
+                                        // 市价 撮合价格回显
+                                        if (!('market_price' in history_data)) {
+                                            $('input[name="market_price"]').attr("checked", false);
+                                        }
+
+                                        if (!('auto_price' in history_data)) {
+                                            $('input[name="auto_price"]').attr("checked", false);
+                                        }
+
+                                        // 请求仓位数据
+                                        set_request_quotes(expTpe.code, 'modify');  // 加载仓位
+                                        // admin.req(setter.djangoAPI + "getLastData/", {code: expTpe.code}, function (res) {
+                                        //     if (res.code === 0) {
+                                        //         let data = res.data;
+                                        //         render_checkbox(data);
+                                        //     }
+                                        // })
+                                        form.render("checkbox");
+                                        form.render('radio');
+
+
+                                    }
+                                }
+
+                                // render time button
+                                let code = '';
+                                if (expTpe.code.includes('-')) {
+                                    code = '-';
+                                } else {
+                                    code = expTpe.code.slice(0, 2);
+                                }
+                                if (code.includes('-')) {
+                                    $('p[name="condition_class"]').text('期权')
+                                } else {
+                                    $('p[name="condition_class"]').text('正股')
+                                }
+
+                                render_button(code);
+                                let code_name = expTpe.stock_name;
+                                // console.log(code_name);
+
+
+                                form.val('eConditionEditForm', expTpe);
+                                $('#stockName').val(code_name);
+
+                                //
+                                // get_search_stock_name($('#conditionInput'));
+
+                            }
+                            // render item table
+                            let insTb = table.render(tbOptions);
+                            // child item table event
+                            table.on('tool(formSSXMTable)', function (obj) {
+                                let event = obj.event;
+                                let data = obj.data;
+                                if (event === 'edit') {
+                                    showEditModel2(data);
+                                } else {
+                                    //delete item
+                                    deleteModel2(data);
+                                }
+                                return;
+                            })
+
+                            // if modify  condition table  that to request data
+                            isAdd ? null : (tbOptions.data = undefined, tbOptions.url = "test");
+                            // 表单股票查询
+                            // input code name for query
+                            let $repeat = 0; // modify time
+                            let $timeout = undefined;
+                            // listen search input code event
+                            $('#conditionInput').bind('input oinput', function () {
+                                let input = this;
+                                if ($repeat === 0) {
+                                    $repeat = 1;
+                                    $timeout = window.setTimeout(function () {
+                                        get_search_stock_name(input);
+                                        $repeat = 0;
+                                    }, 300)
+                                } else {
+                                    window.clearTimeout($timeout);
+                                    $timeout = window.setTimeout(function () {
+                                        get_search_stock_name(input);
+                                        $repeat = 0;
+                                    }, 300)
+                                }
+                            })
+
+                            function render_checkbox(data) {
+                                let all_size = data.max_buy ? data.max_buy : data.can_sell;
+                                let all_box = $('input[name = "invest[full]"]');
+                                let half_box = $('input[name = "invest[half]"]');
+                                let third_box = $('input[name = "invest[third]"]');
+                                let quarter_box = $('input[name = "invest[quarter]"]');
+                                let size = $('#lot_size').val()
+
+                                all_box.attr('title', "全仓|" + all_size);
+                                half_box.attr("title", "半仓|" + Math.floor(all_size / 2 / size) * size);
+                                third_box.attr('title', "1/3仓|" + Math.floor(all_size / 3 / size) * size);
+                                quarter_box.attr('title', "1/4仓|" + Math.floor(all_size / 4 / size) * size);
+
+                                let all_check_position = $("input[lay-filter=\"position\"]");
+                                $.each(all_check_position, function (index, dom) {
+                                    let v = parseFloat($(dom)[0].title.split('|')[1])
+                                    if (v < 1) {
+                                        $(dom).prop('disabled', true);
+                                        $(dom).next().addClass('layui-btn-disabled');
+                                    } else {
+                                        $(dom).prop('disabled', false);
+                                        $(dom).next().addClass('layui-btn-enabled');
+                                    }
+                                })
+
+                                form.render('checkbox');
+
+                            }
+
+                            // 买入卖出按钮点击事件
+                            form.on('radio(radio_t)', function (data) {
+                                // 买入卖出按钮切换时，清空所有复选框的选中
+                                let all_check_position = $("input[lay-filter=\"position\"]");
+                                $.each(all_check_position, function (index, dom) {
+                                    $(dom).removeAttr('checked');
+                                })
+
+
+                                let code = $('#searchInputCode').val();
+                                if (data.value === '0') { // 买入
+                                    $('#price').val($('#first_price').val())
+                                    const max_buy = Math.floor($('#power').val() / $('#price').val());  // 最大可买原来是直接使用max_buy，现在改为用购买力算
+                                    render_checkbox({'max_buy': max_buy});
+                                    $('#stockNumber').prop('disabled', false);
+                                    $('#stockNumber').val($('#lot_size').val())
+                                    let money = ($('#lot_size').val() * $('#price').val());
+                                    // 如果是期权，money，默认要*100
+                                    let conditon_class = $('p[name="condition_class"]').text()
+                                    if (conditon_class === '期权')
+                                        money = money * 100
+                                    $('#money').text(money.toFixed(2))
+                                } else {//卖出
+                                    // 清空数量的初始值
+                                    $('#price').val($('#first_price').val())
+                                    $('#stockNumber').val($('#lot_size').val())
+                                    render_checkbox({'can_sell': $('#can_sell').val()});
+                                    // 如果全仓 小于等于 最小份额 则数量框禁用
+                                    let full_num = $('input[name = "invest[full]"]').attr("title").split("|")[1];
+                                    if (full_num <= $('#lot_size').val()) {
+                                        $('#stockNumber').prop('disabled', true);
+                                    }
+                                    if (full_num === '0') {  // 如果选了卖出，全仓为0，则数量为0，不可编辑
+                                        $('#stockNumber').val(0)
+                                        $('#money').text(0)
+                                    }
+                                }
+                            });
+
+
+                            $("#conditionCodeSelect").click(function (event) {
+                                let code_name = event.target.innerText;
+                                let code = code_name.split(' ')[0]
+                                $("#conditionInput").val(code);
+                                if (code.includes('-')) {
+                                    $('p[name="condition_class"]').text('期权')
+                                } else {
+                                    $('p[name="condition_class"]').text('正股')
+                                }
+                                let buy_radio = $('input[name="direction"][value="0"]');
+                                buy_radio.prop("checked", true);
+                                form.render('radio');
+                            });
+
+
+                            get_search_stock_name({'value': ''});
+
+                            function get_search_stock_name(input) {
+                                let value = input.value;
+                                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                                    word_or_name: value, limit: 15,
+                                    page: 1,
+                                    TrdEnv: setter.TrdEnv,
+                                    token: setter.getToken()
+                                }, function (res) {
+                                    let code = res.code;
+                                    if (code === 0) {
+                                        let data = res.data;
+                                        let drop_menu = $('.dropdown-menu')
+                                        $('.dropdown-menu-nav').empty()
+                                        for (let i = 0; i < data.length; i++) {
+                                            let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                                            li.click(function () {
+                                                input.value = data[i][0];
+                                                let name = data[i][1]
+                                                $('#stockName').val(name);
+                                                // 正股部分，前两个字符
+                                                if (!data[i][0].includes('-')) {
+                                                    let code = data[i][0].slice(0, 2);
+                                                    render_button(code);
+                                                } else {// 期权部分，是否存在 -
+                                                    render_button('-');
+                                                }
+                                                code = data[i][0];
+                                                console.log('code', code)
+                                                // 选新的股票时清空复选框选中状态
+                                                let all_check_position = $("input[lay-filter=\"position\"]");
+                                                $.each(all_check_position, function (index, dom) {
+                                                    $(dom).removeAttr('checked');
+                                                    $(dom).prop('disabled', false);
+                                                    $(dom).next().addClass('layui-btn-enabled');
+                                                })
+                                                // 数量输入框恢复可编辑
+                                                $('#stockNumber').prop('disabled', false);
+
+                                                set_request_quotes(code);
+
+                                                form.render('checkbox');
+
+                                                drop_menu.removeClass('dropdown-open');
+                                            })
+                                            $('.dropdown-menu-nav').append(li);
+                                        }
+                                    }
+                                })
+
+                            }
+
+                            function deleteModel2(data) {
+                                for (let i = 0; i < projectDataList.length; i++) {
+                                    let old_data = projectDataList[i];
+                                    if (old_data.aItem === data.aItem &&
+                                        old_data.bItem === data.bItem &&
+                                        old_data.cItem === data.cItem &&
+                                        old_data.itemValue === data.itemValue) {
+                                        projectDataList.splice(i, 1);
+                                        tbOptions.data = projectDataList;
+                                        tbOptions.url = "";
+                                        table.render(tbOptions);
+                                        return;
+                                    }
+                                }
+
+
+                            }
+
+                            // form.val('eConditionEditForm');
+                            // addition project button event
+                            $("#eAddBtnComment").click(function () {
+                                showEditModel2();
+
+                            });
+
+                            // price calculate
+                            $('#price').bind('input oinput', function () {
+                                if ($('#stockNumber').val()) {
+                                    let money = Number($('#price').val()) * Number($('#stockNumber').val());
+                                    // 如果是期权，money，默认要*100
+                                    let conditon_class = $('p[name="condition_class"]').text()
+                                    if (conditon_class === '期权')
+                                        money = money * 100
+                                    $('#money').text(money.toFixed(2));
+                                    // 价格的变化，在买入的时候会改变仓位的数量
+                                    let bs = $("input[lay-filter=\"radio_t\"]:checked").val()  // 判断是买入买时卖出
+                                    if (bs === '0') {
+                                        const max_buy = Math.floor($('#power').val() / $('#price').val());
+                                        render_checkbox({'max_buy': max_buy})
+                                    }
+                                } else {
+                                    $('#money').text('');
+                                    // $('#money').text('placeholder', '请输入股票数量');
+                                }
+                            })
+                            $('#stockNumber').bind('input oinput', function () {
+                                if ($('#price').val()) {
+                                    let money = Number($('#price').val()) * Number($('#stockNumber').val());
+                                    // 如果是期权，money，默认要*100
+                                    let conditon_class = $('p[name="condition_class"]').text()
+                                    if (conditon_class === '期权')
+                                        money = money * 100
+                                    $('#money').text(money.toFixed(2));
+                                } else {
+                                    $('#money').text('');
+                                    // $('#money').text('placeholder', '请输入股票价格');
+                                }
+
+                            })
+
+
+                            // child dialog item
+                            function showEditModel2(exp) {
+                                admin.open({
+                                        type: 1,
+                                        offset: '150px',
+                                        area: '500px',
+                                        title: (exp ? '修改' : '添加') + '项目',
+                                        content: $('#eConditionChildEditDialog').html(),
+                                        success: function (layero, dIndex) {
+                                            form.render();
+                                            $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                                            // 表单提交事件
+                                            form.on('submit(eChildConditionSubmit)', function (data) {
+                                                if (isAdd) {// added new father item.
+                                                    if (exp) {
+                                                        // modify of front end.
+                                                        for (let i = 0; i < projectDataList.length; i++) {
+                                                            // checked item is exist.
+                                                            let old_item = projectDataList[i];
+                                                            if (old_item.aItem === data.field.aItem &&
+                                                                old_item.bItem === data.field.bItem &&
+                                                                old_item.cItem === data.field.cItem &&
+                                                                old_item.itemValue === data.field.itemValue) {
+                                                                layer.msg('策略已经存在', {icon: 2});
+                                                                return false
+                                                            }
+                                                            if (old_item.aItem === exp.aItem &&
+                                                                old_item.bItem === exp.bItem &&
+                                                                old_item.cItem === exp.cItem &&
+                                                                old_item.itemValue === exp.itemValue) {
+                                                                old_item.aItem = data.field.aItem;
+                                                                old_item.bItem = data.field.bItem;
+                                                                old_item.cItem = data.field.cItem;
+                                                                old_item.itemValue = data.field.itemValue;
+                                                            }
+                                                        }
+                                                        tbOptions.data = projectDataList;
+                                                        tbOptions.url = '';
+                                                        layer.close(dIndex);
+                                                        insTb.reload(tbOptions);
+                                                        return false;
+
+                                                    } else {
+                                                        // add
+                                                        for (let i = 0; i < projectDataList.length; i++) {
+                                                            let item = projectDataList[i];
+                                                            if (item.aItem === data.field.aItem &&
+                                                                item.bItem === data.field.bItem &&
+                                                                item.cItem === data.field.cItem &&
+                                                                item.itemValue === data.f.itemValue) {
+                                                                layer.msg('策略不能重复添加', {icon: 2});
+                                                                return false;
+                                                            }
+                                                        }
+
+                                                        projectDataList.push(data.field);
+                                                        tbOptions.data = projectDataList
+                                                        tbOptions.url = "";
+                                                        insTb.reload(tbOptions);
+                                                        layer.close(dIndex);
+                                                        return false;
+
+                                                    }
+
+                                                } else {
+                                                    // father modify
+                                                    // child modify
+                                                    if (exp) {
+                                                        for (let i = 0; i < projectDataList.length; i++) {
+                                                            let old_item = projectDataList[i];
+                                                            if (old_item.aItem === data.field.aItem &&
+                                                                old_item.bItem === data.field.bItem &&
+                                                                old_item.cItem === data.field.cItem &&
+                                                                old_item.itemValue === data.field.itemValue) {
+                                                                layer.msg('策略已经存在', {icon: 2});
+                                                                return false;
+                                                            }
+                                                            if (old_item.aItem === exp.aItem &&
+                                                                old_item.bItem === exp.bItem &&
+                                                                old_item.cItem === exp.cItem &&
+                                                                old_item.itemValue === exp.itemValue) {
+                                                                old_item.aItem = data.field.aItem;
+                                                                old_item.bItem = data.field.bItem;
+                                                                old_item.cItem = data.field.cItem;
+                                                                old_item.itemValue = data.field.itemValue;
+                                                            }
+
+
+                                                        }
+                                                        tbOptions.data = projectDataList;
+                                                        tbOptions.url = '';
+                                                        insTb.reload(tbOptions);
+                                                        layer.close(dIndex);
+                                                        return false;
+                                                    } else {
+                                                        // child added
+                                                        for (let i = 0; i < projectDataList.length; i++) {
+                                                            let item = projectDataList[i];
+                                                            if (item.aItem === data.field.aItem &&
+                                                                item.bItem === data.field.bItem &&
+                                                                item.cItem === data.field.cItem &&
+                                                                item.itemValue === data.f.itemValue) {
+                                                                layer.msg('策略不能重复添加', {icon: 2});
+                                                                return false;
+                                                            }
+                                                        }
+                                                        layer.close(dIndex);
+                                                        projectDataList.push(data.field);
+                                                        tbOptions.data = projectDataList
+                                                        tbOptions.url = "";
+                                                        insTb.reload(tbOptions);
+                                                        return false;
+
+                                                    }
+                                                }
+                                            });
+                                            $('#childItemCancel').click(function (r) {
+                                                layer.close(dIndex);
+                                                return false;
+                                            })
+                                            let casder_config = {
+                                                elem: '#aItem',
+                                                // data: [],
+                                                trigger: 'hover',
+                                                filterable: true,
+                                                // reqData: function (values, callback, data) {
+                                                //     console.log(values, data);
+                                                // },
+                                                renderFormat: function (labels, values) {
+                                                    let end_index = labels.length - 1;
+                                                    return labels[end_index];
+                                                }
+                                            }
+
+                                            function getData(value, callback) {
+                                                let label_value_list = [];
+                                                if (!value) {
+                                                    admin.req(setter.djangoAPI + 'getStrategyOption/?S_name=ALL' + '&TrdEnv=' + setter.TrdEnv + '&token=' + setter.getToken(),
+                                                        function (res) {
+                                                            $.each(res.data.aItem, function (index, value) {
+                                                                let new_data = {value: value, label: value};
+                                                                label_value_list.push(new_data);
+                                                            })
+                                                            callback(label_value_list)
+                                                        })
+
+                                                    return false;
+                                                }
+                                            }
+
+                                            $('#eConditionChildForm input:first').each(function (index) {
+                                                console.log('修改策略')
+                                                let id = $(this).attr('id');
+                                                let elem_cascade_setting = Object.create(casder_config);
+                                                let bItem_cascade_setting = Object.create(casder_config);
+                                                let cItem_cascade_setting = Object.create(casder_config);
+                                                let value_cascade_setting = Object.create(casder_config);
+                                                let bItemObject = $('#bItemCascade');
+                                                let cItemObject = $('#cItemCascade');
+                                                let valueObject = $('#itemValue');
+                                                elem_cascade_setting.elem = '#' + id;
+                                                bItem_cascade_setting.elem = "#" + bItemObject.attr('id');
+                                                cItem_cascade_setting.elem = "#" + cItemObject.attr('id');
+                                                value_cascade_setting.elem = "#" + valueObject.attr('id');
+                                                let tmp_cItem_data = [];
+                                                // insert dom object
+                                                elem_cascade_setting.reqData = function (values, callback, data) {
+                                                    getData(undefined, callback)
+
+                                                }
+
+
+                                                elem_cascade_setting.onChange = function (value, data) {
+                                                    tmp_cItem_data = [];
+                                                    const req_url = setter.djangoAPI + "getStrategyOption/?token=" + setter.getToken() + '&TrdEnv=' + setter.TrdEnv
+                                                    admin.req(req_url, {S_name: value[0]}, function (res) {
+                                                        let data = res.data
+                                                        let b_item = data.bItem;
+                                                        let c_item = data.cItem;
+                                                        let value_item = data.itemValue;
+
+
+                                                        let bItemNewInsertItemList = [];
+                                                        let cItemNewInsertItemList = [];
+                                                        let valueItemNewInsertItemList = [];
+                                                        $.each(b_item, function (index, value) {
+                                                            let new_data = {label: value, value: value}
+                                                            bItemNewInsertItemList.push(new_data)
+                                                        });
+                                                        $.each(c_item, function (index, value) {
+                                                            let new_data = {label: value, value: value}
+                                                            cItemNewInsertItemList.push(new_data)
+                                                            tmp_cItem_data.push(new_data)
+
+
+                                                        });
+                                                        if (cItemNewInsertItemList.length === 0) {
+                                                            $('#cItemCascade').val('未定义')
+                                                            cItemNewInsertItemList.push({label: '未定义', value: '未定义'});
+                                                        }
+
+                                                        if (bItemNewInsertItemList.length === 1) {
+                                                            let tmp_v = bItemNewInsertItemList[0].value;
+                                                            $('#bItemCascade').val(tmp_v)
+                                                        }
+
+                                                        let itemValueAttr = {V: 'number', T: 'time'}
+                                                        let value_attr = itemValueAttr[value_item];
+                                                        valueObject.attr('type', value_attr);
+                                                        form.render(null, 'itemValue');
+
+
+                                                        bItem_cascade_setting.data = bItemNewInsertItemList;
+                                                        cItem_cascade_setting.data = cItemNewInsertItemList;
+                                                        value_cascade_setting.data = valueItemNewInsertItemList;
+                                                        cascader.render(bItem_cascade_setting);
+                                                        cascader.render(cItem_cascade_setting);
+                                                        // cascader.render(value_cascade_setting);
+
+
+                                                    })
+                                                };
+
+                                                bItem_cascade_setting.onChange = function (value, data) {
+                                                    if (($('#aItemCascade').val() === '关联市价')) {
+                                                        if (data.value === '指定价格') {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(0, 5)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        } else if ((data.value === '涨跌额' || data.value === '涨跌幅')) {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(5, 7)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        }
+                                                    } else if ($('#aItemCascade').val() === '指数') {
+                                                        if (data.value === '固定值') {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(0, 5)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        } else if ((data.value === '涨跌幅')) {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(5, 7)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        }
+                                                    } else if ($('#aItemCascade').val() === '当前市价') {
+                                                        if (data.value === '指定价格') {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(0, 5)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        } else if ((data.value === '是否最高最低价')) {
+                                                            cItem_cascade_setting.data = tmp_cItem_data.slice(5, 7)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        }
+                                                    } else {
+                                                        if ((data.value === '涨跌额' || data.value === '涨跌幅')) {
+                                                            // cItem_cascade_setting.data = tmp_cItem_data.slice(5, 7)
+                                                            cascader.render(cItem_cascade_setting);
+                                                        }
+                                                    }
+                                                }
+
+                                                let aItem = cascader.render(elem_cascade_setting);
+                                                let bItem = cascader.render(bItem_cascade_setting);
+                                                let cItem = cascader.render(cItem_cascade_setting);
+                                                if (exp) {
+                                                    // 回显数据
+                                                    console.log('加载缓存')
+                                                    const req_url = setter.djangoAPI + "getStrategyOption/?token=" + setter.getToken() + '&TrdEnv=' + setter.TrdEnv
+                                                    admin.req(req_url, {S_name: exp.aItem}, function (res) {
+                                                        let data = res.data
+                                                        let b_item = data.bItem;
+                                                        let c_item = data.cItem;
+                                                        let value_item = data.itemValue;
+
+
+                                                        let bItemNewInsertItemList = [];
+                                                        let cItemNewInsertItemList = [];
+                                                        let valueItemNewInsertItemList = [];
+                                                        $.each(b_item, function (index, value) {
+                                                            let new_data = {label: value, value: value}
+                                                            bItemNewInsertItemList.push(new_data)
+                                                        });
+                                                        $.each(c_item, function (index, value) {
+                                                            let new_data = {label: value, value: value}
+                                                            cItemNewInsertItemList.push(new_data)
+
+                                                        });
+                                                        if (cItemNewInsertItemList.length === 0) {
+                                                            $('#cItemCascade').val('未定义')
+                                                            cItemNewInsertItemList.push({label: '未定义', value: '未定义'});
+                                                        }
+                                                        if (bItemNewInsertItemList.length === 1) {
+                                                            let tmp_v = bItemNewInsertItemList[0].value;
+                                                            $('#bItemCascade').val(tmp_v)
+                                                        }
+
+                                                        let itemValueAttr = {V: 'number', T: 'time'}
+                                                        let value_attr = itemValueAttr[value_item];
+                                                        valueObject.attr('type', value_attr);
+                                                        valueObject.attr('value', exp.itemValue);
+                                                        form.render(null, 'itemValue');
+
+
+                                                        bItem_cascade_setting.data = bItemNewInsertItemList;
+                                                        cItem_cascade_setting.data = cItemNewInsertItemList;
+                                                        value_cascade_setting.data = valueItemNewInsertItemList;
+                                                        let bItem = cascader.render(bItem_cascade_setting);
+                                                        let cItem = cascader.render(cItem_cascade_setting);
+
+                                                        aItem.setValue(exp.aItem);
+                                                        bItem.setValue(exp.bItem);
+                                                        cItem.setValue(exp.cItem);
+
+                                                        // cascader.render(value_cascade_setting);
+
+
+                                                    })
+                                                    // console.log(exp)
+                                                    // setTimeout(bItem.setValue(exp.bItem), 500);
+                                                    // setTimeout(cItem.setValue(exp.cItem), 500);
+
+                                                }
+
+                                                // cascader.render(value_cascade_setting);
+                                            })
+
+                                        }
+                                    }
+                                )
+
+
+                            }
+
+                        },
+                        end: function () {
+                            // Must destroy quote interval event
+                            if (interval_function_id) clearInterval(interval_function_id);
+                            return false;
+                        }
+                    }
+                )
+
+            }
+
+
+            // addition condition
+            $("#eConditionAddBtn").click(
+                function () {
+                    showEditModel();
+                }
+            )
+            // input code name for query
+            let $repeat = 0; // modify time
+            let $timeout = undefined;
+            // listen search input code event
+            $('#stockInput').bind('input oinput', function () {
+                let input = this;
+                if ($repeat === 0) {
+                    $repeat = 1;
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                } else {
+                    window.clearTimeout($timeout);
+                    $timeout = window.setTimeout(function () {
+                        get_search_stock_name(input);
+                        $repeat = 0;
+                    }, 300)
+                }
+            })
+
+            $("#conditionCodeSelect1").click(function (event) {
+                let code_name = event.target.innerText;
+                let code = code_name.split(' ')[0]
+                $("#stockInput").val(code);
+            });
+
+            get_search_stock_name({'value': ''});
+
+            // get_search_stock_name('');
+            function get_search_stock_name(input) {
+                let value = input.value;
+                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                    word_or_name: value, limit: 15,
+                    page: 1,
+                    TrdEnv: setter.TrdEnv,
+                    token: setter.getToken()
+                }, function (res) {
+                    let code = res.code;
+                    if (code === 0) {
+                        let data = res.data;
+                        let drop_menu = $('.dropdown-menu');
+                        $('#conditionCodeSelect1').empty()
+                        for (let i = 0; i < data.length; i++) {
+                            let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                            li.click(function () {
+                                input.value = data[i][0];
+                                drop_menu.removeClass('dropdown-open');
+                            })
+                            $('.dropdown-menu-nav').append(li);
+                        }
+                    }
+                })
+
+            }
+
+            // search condition
+            form.on('submit(eSearch)', function (data) {
+                let filed = data.field
+                insTb.reload({where: filed})
+                return false;
+            })
+        }
+    )
+
+</script>
+

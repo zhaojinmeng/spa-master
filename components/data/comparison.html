@@ -1,0 +1,288 @@
+<!--content-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">股票代码:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" id="comparisonMenu">
+                                <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                       name="word_or_name" id="comparisonInput" placeholder="输入股票代码" value="">
+                                <ul class="dropdown-menu-nav" id="comparisonCodeSelect"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">开始日期:</label>
+
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="startDate" id="startDateChange" placeholder="选择开始日期">
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">结束日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="endDate" id="endDateChange" placeholder="选择结束日期">
+                        </div>
+                    </div>
+
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn" lay-filter="eSearchButton" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">时段:</label>
+                        <div class="layui-input-inline">
+                            <select name="status" lay-verType="message"
+                                    required>
+                                <option value="middle">盘中行情</option>
+                                <option value="pre">盘前行情</option>
+                                <option value="after">盘后行情</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <table id="plateDataTable" lay-filter="plateDatatable"></table>
+        </div>
+    </div>
+</div>
+
+<!--js-->
+<script type="text/javascript">
+    layui.use(['layer', 'form', 'admin', 'setter', 'table', 'element', 'dropdown', 'laydate'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let date = layui.laydate;
+        let table = layui.table;
+        let admin = layui.admin;
+        let setter = layui.setter;
+        let layer = layui.layer;
+        setter.baseServer = '';
+
+        function getPreMonth(nowdate) {
+            nowdate.setMonth(nowdate.getMonth() - 1);
+            var y = nowdate.getFullYear();
+            var m = nowdate.getMonth() + 1;
+            m = m < 10 ? '0' + m : m
+            var d = nowdate.getDate();
+            d = d < 10 ? '0' + d : d
+            var formatwdate = y + '-' + m + '-' + d;
+            return formatwdate;
+        }
+
+        form.render();
+        date.render({
+            elem: '#endDateChange',
+            value: new Date()
+        });
+        date.render({
+            elem: "#startDateChange",
+            value: getPreMonth(new Date())
+        })
+        // table config
+        let today = new Date();
+
+        hundred_million = function (item_key) {
+            if (item_key.includes('万'))
+                return (parseFloat(item_key.slice(0, -2)) / 10000).toFixed(3);
+            else
+                return item_key.slice(0, -2);
+        }
+
+        let plateTableConfig = {
+            elem: '#plateDataTable',
+            id: 'Reload',
+            page: true,
+            size: 15,
+            url: setter.djangoAPI + "minCompare/",// backend interface for request data url.
+            where: {
+                code: 'US.AAPL',
+                sd: $('#startDateChange').val(),
+                ed: $('#endDateChange').val(),
+                token: setter.getToken(),
+                timeRange: 'middle',
+                TrdEnv: setter.TrdEnv
+            },
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'date_field', title: '日期', align: 'left', sort: true},
+                {field: 'week', title: '星期', align: 'left'},
+                {
+                    field: 'turnover', title: '总额(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.turnover)
+                    }
+                },
+                {
+                    field: 'field_1min', title: "1分(亿)", align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_1min)
+                    }
+                },
+                {
+                    field: 'field_3min', title: '3分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_3min)
+                    }
+                },
+                {
+                    field: 'field_5min', title: '5分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_5min)
+                    }
+                },
+                {
+                    field: 'field_10min', title: '10分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_10min)
+                    }
+                },
+                {
+                    field: 'field_15min', title: '15分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_15min)
+                    }
+                },
+                {
+                    field: 'field_20min', title: '20分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_20min)
+                    }
+                },
+                {
+                    field: 'field_30min', title: '30分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_30min)
+                    }
+                },
+                {
+                    field: 'field_40min', title: '40分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_40min)
+                    }
+                },
+                {
+                    field: 'field_60min', title: '60分(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_60min)
+                    }
+                },
+                {
+                    field: 'field_2hour', title: '2小时(亿)', align: "left", sort: true, templet: function (d) {
+                        return hundred_million(d.field_2hour)
+                    }
+                },
+                {
+                    field: 'field_4hour', title: '4小时(亿)', align: 'left', sort: true, templet: function (d) {
+                        return hundred_million(d.field_4hour)
+                    }
+                }
+
+
+            ]]
+        };
+        //render
+        table.render(plateTableConfig);
+
+
+        // search
+        form.on('submit(eSearchButton)', function (data) {
+            let timeRange = data.field.status
+            let code = $('#comparisonInput').val();
+            let sd = $('#startDateChange').val()
+            let ed = $('#endDateChange').val()
+
+            table.reload('Reload', {
+                where: {'code': code, 'sd': sd, 'ed': ed, 'timeRange': timeRange},
+                page: {curr: 1}
+            })
+
+            return false;
+        })
+
+        // input code name for query
+        let $repeat = 0; // modify time
+        let $timeout = undefined;
+        // listen search input code event
+        $('#comparisonInput').bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        })
+
+        $("#comparisonCodeSelect").click(function (event) {
+            let code_name = event.target.innerText;
+            let code = code_name.split(' ')[0]
+            $("#comparisonInput").val(code);
+        });
+
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#comparisonMenu')
+                    $('#comparisonCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                }
+            })
+        }
+
+        function get_search_stock_name_first(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#comparisonMenu')
+                    $('#comparisonCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                    $('#comparisonInput').val(data[0][0]);
+                }
+            })
+        }
+
+        // $("#comparisonInput").bind('click',function (e) {
+        //     get_search_stock_name(this);
+        // })
+        get_search_stock_name_first({'value': ''})
+    })
+</script>

@@ -1,0 +1,16 @@
+{
+  "code": 0,
+  "msg": "123",
+  "count": 2,
+  "data": [{
+    "class": "正股",
+    "code": "0000001",
+    "name": "平安证券",
+    "trade_object": "正股",
+    "trade_class": "买入",
+    "state": 1,
+    "numbers": 1000,
+    "price": 14.50,
+    "orderTime": "2019/3/2 11:20:03",
+    "transactionTime": "2019/3/2 11:20:15"
+  }]}

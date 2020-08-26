@@ -1,0 +1,332 @@
+<style>
+    /** 数据表格中的select尺寸调整 */
+    .layui-table-view .layui-table-cell .layui-select-title .layui-input {
+        height: 28px;
+        line-height: 28px;
+    }
+
+    .layui-table-view [lay-size="lg"] .layui-table-cell .layui-select-title .layui-input {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .layui-table-view [lay-size="lg"] .layui-table-cell .layui-select-title .layui-input {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .layui-table-view [lay-size="sm"] .layui-table-cell .layui-select-title .layui-input {
+        height: 20px;
+        line-height: 20px;
+    }
+
+    .layui-table-view [lay-size="sm"] .layui-table-cell .layui-btn-xs {
+        height: 18px;
+        line-height: 18px;
+    }
+
+    body .layui-layer-dialog .layui-layer-btn0 {
+        background: green;
+        border-color: green;
+        color: white;
+    }
+</style>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item" style="width:1500px">
+                    <div class="layui-inline">
+                        <div class="layui-card" id="addCard">
+                            <div class="layui-card-body">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label" style="width: 140px;">输入股票名称或代码</label>
+                                    <div class="layui-input-block" style="display: inline-block;margin-left: 30px">
+                                        <div class="dropdown-menu" id="realMenu">
+                                            <input id="codeInput" value="" class="layui-hide" autocomplete="off"/>
+                                            <input type="text" id="realInput" class="layui-input"
+                                                   style="width: 80%;border: solid 1px grey"
+                                                   placeholder="+请输入" autocomplete="off"/>
+                                        </div>
+                                        <ul id="stockNotificationList" class="dropdown-menu-nav" style="margin: 10px 0
+                     0 59px">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <div class="dropdown-menu">
+                            <button class="layui-btn icon-btn" id="Type">
+                                &nbsp;查询类型 <i class="layui-icon layui-icon-drop"></i>
+                            </button>
+                            <ul class="dropdown-menu-nav layui-anim-upbit dropdown-bottom-left layui-anim" style="">
+                                <li class="" id="first_"><a>固定周期</a></li>
+                                <li class=""><a>自选周期</a></li>
+                                <li class=""><a>按月查询</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label layui-form-required"
+                               style="display: inline-block;float: revert ">
+                            日期范围
+                        </label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" id="dateChange1" placeholder="选择日期" autocomplete="off">
+                        </div>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" id="dateChange2" placeholder="选择日期" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+
+                        <button class="layui-btn icon-btn" id="addStockCode" type="button">
+                            <i class="layui-icon">&#xe654;</i>查询
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="tbBasicTable1" lay-filter="tbBasicTable1"></table>
+        </div>
+    </div>
+</div>
+
+
+<!-- js部分 -->
+<script>
+    layui.use(['layer', 'jquery', 'index', 'admin', 'setter', 'form', 'table', 'util', 'dropdown', "tagsInput", "laydate"], function () {
+        let admin = layui.admin;
+        let setter = layui.setter;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        let date = layui.laydate;
+        var dropdown = layui.dropdown;
+        let tagsInput = layui.tagsInput;
+        let index = layui.index;
+        setter.baseServer = '';
+        /* 渲染表格 */
+
+        function getPreMonth(nowdate) {
+            nowdate.setMonth(nowdate.getMonth()-1);
+            var y = nowdate.getFullYear();
+            var m = nowdate.getMonth()+1;
+            m = m<10? '0'+m: m
+            var d = nowdate.getDate();
+            d = d<10? '0'+d: d
+            var formatwdate = y+'-'+m+'-'+d;
+            return formatwdate;
+        }
+
+        form.render();
+        date.render({
+            elem: '#dateChange1',
+            value: getPreMonth(new Date())
+        })
+        date.render({
+            elem: '#dateChange2',
+            value: new Date()
+
+        })
+
+        let col1 = [[
+            {type: 'numbers'},
+            {field: 'code', title: '股票', align: 'left', sort: true},
+            {field: 'start_day', title: '起始日期', align: 'left', sort: true},
+            {field: '1d', title: '1天', align: 'left', sort: true},
+            {field: '2d', title: '2天', align: 'left', sort: true},
+            {field: '3d', title: '3天', align: 'left', sort: true},
+            {field: '7d', title: "7天", align: 'left', sort: true},
+            {field: '14d', title: '14天', align: 'left', sort: true},
+            {field: '30d', title: '30天', align: 'left', sort: true},
+            {field: '60d', title: '60天', align: 'left', sort: true},
+            {field: '90d', title: '90天', align: 'left', sort: true},
+            {field: '180d', title: '180天', align: 'left', sort: true},
+            {field: '365d', title: '365天', align: 'left', sort: true},
+            {field: '545d', title: '545天', align: 'left', sort: true},
+            {field: '720d', title: '720天', align: 'left', sort: true},
+
+        ]]
+        let col2 = [[
+            // ['code','start_day','dateRange']
+            {type: 'numbers'},
+            {field: 'code', title: '股票', align: 'left', sort: true},
+            {field: 'start_day', title: '起始日期', align: 'left', sort: true},
+            {field: 'dateRange', title: '时间范围', align: 'left', sort: true},
+
+        ]]
+
+        let insTb1 = {
+            elem: '#tbBasicTable1',
+            id: 'tbBasicTable1',
+            page: true,
+            limit: 15,
+            cellMinWidth: 100,
+            data: [],
+            cols: []
+        };
+        let table1 = table.render(insTb1);
+
+
+        let post_code = [];
+        $('#addStockCode').click(function () {
+            let cycle_type = $('#Type').text();
+            let sd = $('#dateChange1').val();
+            let ed = $('#dateChange2').val();
+            let POST_DATA = {
+                'stock_list': JSON.stringify(post_code),
+                'cycle_type': cycle_type,
+                'sd': sd,
+                'ed': ed,
+                'token': setter.getToken(),
+                TrdEnv:setter.TrdEnv
+            }
+            admin.req(setter.djangoAPI + 'getCycleUdp/', POST_DATA, function (r) {
+                if (r.code === 0) {
+
+
+                    let resData = r.data;
+                    let Type = resData.Type
+                    let tabData = resData.data
+                    if (Type === '固定周期') {
+                        table1 = table.render(insTb1);
+                        table1.reload({data: tabData, cols: col1})
+                        console.log(col1)
+                    } else if (Type === '自选周期') {
+                        table1 = table.render(insTb1);
+                        table1.reload({data: tabData, cols: col2})
+                        console.log(col2)
+
+                    } else if (Type === '按月查询') {
+                        let resHeader = resData.header
+                        let cols3 = [{type: 'numbers'}]
+
+                        for (let i in resHeader) {
+                            let col_tmp = {field: resHeader[i], title: resHeader[i], align: 'left', sort: true}
+                            cols3.push(col_tmp)
+                        }
+                        table1 = table.render(insTb1);
+                        table1.reload({data: tabData, cols: [cols3]})
+                    }
+
+
+                } else layer.msg("添加失败", {icon: 2});
+                layer.close(index);
+            }, "post");
+        });
+
+
+        // 点击添加股票
+        let notification_input = $('#codeInput')
+        let tagAdd = function (tag) {
+            $('#codeInput_tagsinput').show();
+            $('#realInput').css('margin-top', "10px");
+            post_code.push(tag);
+            $("#codeInput_tagsinput").append(input);
+
+        }
+        let tagRemove = function (tag) {
+            let index = post_code.indexOf(tag);
+            if (index !== -1) post_code.splice(index, 1);
+        }
+
+        notification_input.tagsInput({
+            removeWithBackspace: true,
+            interactive: false,
+            onAddTag: tagAdd,
+            onRemoveTag: tagRemove
+        });
+
+        let input = $('#realInput')
+        $('#realMenu').append(input);
+        $('#codeInput_tagsinput').hide();
+        $("#codeInput_tagsinput").css('width', "400px")
+
+        let code_list = $('#stockNotificationList');
+
+        code_list.hide();
+
+        function get_serach_stock_name() {
+            return function () {
+                let value = this.value;
+                let that = this;
+
+                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                    word_or_name: value,
+                    limit: 15,
+                    page: 1,
+                    TrdEnv:setter.TrdEnv,
+                    token:setter.getToken()
+                }, function (res) {
+                    let code = res.code;
+                    if (code === 0) {
+                        let data = res.data;
+
+                        code_list.empty();
+                        for (let i = 0; i < data.length; i++) {
+                            let li = $('<li><a>' + data[i][0] + data[i][1] + '</a></li>');
+                            li.click(function (e) {
+                                that.value = "";
+                                // input.val(data[i][0] + '  ' + data[i][1]);
+                                const tag_data = data[i][0] + '   ' + data[i][1];
+                                if (post_code.includes(tag_data)){
+                                    layer.msg("不能添加重复的数据",{icon:2});
+                                    return false;
+                                }
+                                notification_input.addTag(data[i][0] + '   ' + data[i][1]);
+                                code_list.hide();
+                                $('.layui-layer-prompt').css('height', "");
+                                $(".layui-layer-content").css('height', "");
+                            })
+                            code_list.append(li);
+                        }
+                        code_list.show();
+                        $('.layui-layer-prompt').css('height', "700px");
+                        $(".layui-layer-content").css('height', "80%");
+                    }
+                })
+            };
+        }
+
+        input.bind('input output', get_serach_stock_name());
+        input.bind("click", get_serach_stock_name());
+
+        // event select item
+        let drop_menu = $('.dropdown-menu');
+        let button_drop = drop_menu.find('button:first');
+        let drop_list = drop_menu.find("ul");
+        // first period is default select.
+        const first_period = $('#first_');
+        button_drop.contents().first()[0].textContent = first_period.text();
+        drop_list.click(function (e) {
+            let target = e.target;
+            if ($.nodeName(target, "A")) {
+                button_drop.contents().first()[0].textContent = target.innerText;
+                drop_menu.removeClass("dropdown-open");
+            }
+
+        })
+
+        // 点击其他区域隐藏下拉框
+        $(document).bind("click",function(e){
+        var e = e || window.event;    //事件对象，兼容IE
+        var target = e.target || e.srcElement;  //源对象，兼容火狐和IE
+        while(target){
+           if (target.id && target.id == "selected"){    //循环判断至根节点，防止点击的是#selected和它的子元素
+              return;
+        }
+           target = target.parentNode;
+        }
+           code_list.hide();   //点击的不是#selected和它的子元素，隐藏下拉菜单
+        })
+
+    });
+</script>

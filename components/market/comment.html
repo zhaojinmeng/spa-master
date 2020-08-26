@@ -1,0 +1,454 @@
+<style xmlns="http://www.w3.org/1999/html">
+    /** 文章列表样式 */
+    .article-list-item {
+        border-bottom: 1px solid #e8e8e8;
+        margin-top: 16px;
+        position: relative;
+    }
+
+    .article-list-item > h2 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 12px;
+    }
+
+    .article-list-item > .layui-badge-rim {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .article-list-item .layui-badge-list .layui-badge {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .article-list-item .article-list-item-text {
+        margin-bottom: 12px;
+        word-wrap: break-word;
+        word-break: break-all;
+    }
+
+    .article-list-item .article-list-item-desc {
+        margin-bottom: 12px;
+    }
+
+    .article-list-item .article-list-item-desc .head {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+
+    .article-list-item .article-list-item-desc > * {
+        vertical-align: middle;
+    }
+
+    .article-list-item .article-list-item-tool {
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item {
+        border-right: 1px solid #e8e8e8;
+        padding: 0 15px;
+        cursor: pointer;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item:first-child {
+        padding-left: 0;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item:last-child {
+        border-right: none;
+        padding-right: 0;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item > * {
+        vertical-align: middle;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item.star-active {
+        color: #01AAED;
+    }
+
+    .article-list-item .article-list-item-tool .article-list-item-tool-item.star-active .layui-icon-rate:before {
+        content: "\e67a";
+    }
+
+    .red {
+        color: red;
+    }
+
+    .green {
+        color: green;
+    }
+
+    /** // 文章列表样式结束 */
+</style>
+<!--article-->
+<script type="text/html" id="articleCard">
+    <div class="article-list-item">
+
+        {{# if (d.title){ }}
+        <h2 style="color: inherit">{{d.title}}</h2>
+        {{#} else {}}
+        <h2 style="color: inherit"></h2>
+        {{#} }}
+
+        <div class="layui-badge-list">
+            <span class="layui-badge layui-badge-gray">{{d.stock_name}}</span>
+        </div>
+
+        <div class="article-list-item-text layui-text" style="color: inherit">
+            {{d.content}}
+        </div>
+
+        <div class="article-list-item-desc layui-text">
+            <!--                <a href="javascript:;" class="name" style="color: inherit">{{d.stocklist}}</a>-->
+            {{# if(d.ctime.length > 8){ }}
+            <span class="layui-badge-rim">{{d.ctime}}</span>
+            {{#} else{ }}<span class="layui-badge-rim red">{{d.ctime}}</span>{{# } }} <a href="{{d.link}}"
+                                                                                         target="_blank">{{d.link}}</a>
+        </div>
+
+        <div class="article-list-item-tool">
+            <span class="article-list-item-tool-item " lay-event="like"> <i class="layui-icon layui-icon-praise"></i>&nbsp; <span>阅{{d.readnum}}</span> </span>
+            <span class="article-list-item-tool-item" lay-event="comment"> <i
+                    class="layui-icon layui-icon-dialogue"></i>&nbsp; <span>{{d.commnum}}</span> </span></div>
+    </div>
+    </div>
+
+</script>
+<!--body-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form" lay-filter="query">
+
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label">股票选择:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu" id="stockCodeMenu">
+                                <input name="code" id="stockCodeInput" autocomplete="off"
+                                       class="layui-input" placholder="请输入股票代码" type="text"
+                                       required>
+                                <ul class="dropdown-menu-nav" id="stockCodeSelect">
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="layui-inline" style="margin-right: 0px;">
+                        <label class="layui-form-label">关键词:</label>
+                        <div class="layui-input-inline">
+                            <input name="keyword" id="keyword" autocomplete="off"
+                                   class="layui-input" placholder="请输入查找的关键词" type="text"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="layui-inline" style="margin-right: 0px;">
+                        <label class="layui-form-label">选择日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name="sd" id="dateChange1" autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" name="ed" id="dateChange2" autocomplete="off"
+                                   placeholder="选择日期"/>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="eSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+    <div class="layui-card">
+        <form class="layui-form" lay-filter="Order">
+            <div class="layui-form-item">
+                <div class="layui-input-block" id="formRadio">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="layui-card">
+
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">评论</li>
+            </ul>
+            <div class="layui-tab-content" style="padding-bottom: 20px">
+                <div class="layui-tab-item layui-show" style="padding-top:10px;">
+                    <div class="layui-row layui-col-space30" id="telegram"
+                         style="padding-left: 10px;padding-bottom: 20px;"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!--js-->
+<script>
+    function getPreMonth(nowdate) {
+        nowdate.setMonth(nowdate.getMonth() - 1);
+        var y = nowdate.getFullYear();
+        var m = nowdate.getMonth() + 1;
+        m = m < 10 ? '0' + m : m
+        var d = nowdate.getDate();
+        d = d < 10 ? '0' + d : d
+        var formatwdate = y + '-' + m + '-' + d;
+        return formatwdate;
+    }
+
+
+    layui.use(['form', 'layer', 'laydate', 'admin', 'dataGrid', 'element', 'dropdown', 'setter'], function () {
+        let $ = layui.jquery;
+        let layer = layui.layer;
+        let dataGrid = layui.dataGrid;
+        let setter = layui.setter;
+        let form = layui.form;
+        let admin = layui.admin;
+        let date = layui.laydate;
+        setter.baseServer = '';
+        // article
+        form.render();
+
+        // radio点击事件
+        form.on('radio(radio_t)', function (data) {
+            telegram_render_setting.where.code = data.value
+            // telegram_render_setting.where.sd=data.value
+            // telegram_render_setting.where.ed=data.value
+            dataGrid.render(telegram_render_setting);
+        });
+
+
+        dataGrid.on('item(telegram)', function (obj) {
+            // layer.msg('点击了第' + (obj.index + 1) + '个');
+            // 更新已读的条件为read==0
+            if (obj.data.read === 0) {
+                let ajax_parameter = {
+                    url: setter.djangoAPI + 'commentUpdateRead/',
+                    data: {'link': obj.data.link, 'token': setter.getToken(), 'TrdEnv': setter.TrdEnv},
+                    type: 'POST',
+                    success: function (result, status, xhr) {
+                        // layer.msg(result.msg);
+                    }
+                }
+                admin.ajax(ajax_parameter)  // 更新已读的read
+                $('h2').eq(obj.index).css("font-weight", 'normal');  // 加粗改回普通
+
+                // 对应的radio的数量 -1
+                let title_elem = $("input[lay-filter=\"radio_t\"][value='" + obj.data.code + "']")
+                let num = parseInt(title_elem.attr('title').match(/\(\d+\)/g)[0].replace('(', '').replace(')', ''))
+                num -= 1;
+                title_elem.attr('title', obj.data.stock_name + '(' + num + ')')
+                obj.data.read = 1
+                form.render('radio');
+                change_color()
+            }
+
+        });
+
+        date.render({
+            elem: "#dateChange1",
+            value: new Date()
+        })
+        date.render({
+            elem: "#dateChange2",
+            value: new Date()
+        })
+
+        let $repeat = 0; // modify time
+        let $timeout = undefined;
+        // listen search input code event
+        $('#stockCodeInput').bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        })
+
+        $("#stockCodeSelect").click(function (event) {
+            let code_name = event.target.innerText;
+            let code = code_name.split(' ')[0]
+            $("#stockCodeInput").val(code);
+        });
+
+
+        // get_search_stock_name('')
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value,
+                limit: 15,
+                page: 1,
+                TrdEnv: setter.TrdEnv,
+                token:setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#stockCodeMenu')
+                    $('#stockCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                }
+            })
+        }
+
+        // 本页面首次加载
+        function get_search_stock_name_first(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value,
+                limit: 15,
+                page: 1,
+                TrdEnv: setter.TrdEnv,
+                token:setter.getToken()
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#stockCodeMenu')
+                    $('#stockCodeSelect').empty()
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i][0] + ' ' + data[i][1] + '</a></li>');
+                        li.click(function () {
+                            input.value = data[i][0];
+                            drop_menu.removeClass('dropdown-open');
+                        })
+                        $('.dropdown-menu-nav').append(li);
+                    }
+                    get_notRead_count('')
+                }
+            })
+        }
+
+        get_search_stock_name_first({'value': ''})
+
+        // 未读的字体颜色变红
+        change_color = function () {
+            let divList = $('#formRadio div[class="layui-unselect layui-form-radio"]')
+            for (var i = 0; i < divList.length; i++) {
+                if (divList[i].innerText.includes('(') )
+                    divList[i].style.color = 'red'
+                else
+                    divList[i].style.color = 'black'
+            }
+        }
+
+        // 加载最近一个月关注个股的未读新闻数量
+        get_notRead_count = function (code) {
+            let sd = $('#dateChange1').val()
+            let ed = $('#dateChange2').val()
+            admin.req(setter.djangoAPI + 'getCommentNotRead/', {
+                sd: sd, ed: ed, code: code,
+                TrdEnv: setter.TrdEnv, token: setter.getToken()
+            }, function (res) {
+                // 动态创建radio
+                $('#formRadio').empty();
+                let data = res.data;
+                for (var i = 0; i < data.length; i++) {
+                    //    lay-filter="radio_t">
+                    // <input type="radio" name="stock_direction" value="0" title="买入(做多)" checked
+                    let radio = document.createElement('input');
+                    radio.setAttribute('type', 'radio');
+                    radio.setAttribute('value', data[i][1]);
+                    radio.setAttribute('lay-filter', 'radio_t');
+                    radio.setAttribute('name', 'code_count');
+                    if(data[i][2]===0)
+                        radio.setAttribute('title', data[i][0]);
+                    else
+                        radio.setAttribute('title', data[i][0] + '(' + data[i][2] + ')');
+                    $('#formRadio').append((radio))
+                }
+
+                form.render('radio');
+                change_color()
+            })
+        }
+
+        let stock_where_config = {
+            'sd': $('#dateChange1').val(),
+            'ed': $('#dateChange2').val(),
+            'keyword': '',
+            'token': setter.getToken(),
+            'code': $('#stockCodeInput').val(),
+            TrdEnv: setter.TrdEnv
+        };
+        let telegram_render_setting = {
+            elem: '#telegram',
+            templet: '#articleCard',
+            url: setter.djangoAPI + "getNewsComment/",
+            // data: simulated_data,
+            toolbar: '#toolbar',
+            page: true,
+            where: stock_where_config,
+            done: function (res, curr, count) {
+                // red code will have clicked that to request all the telegram
+                $('.badge-link').bind("click", function (e) {
+                    const stock_name = ($(this).text());
+                    stock_where_config.relevanceCode = stock_name;
+                    stock_where_config.sd = getPreMonth(new Date($('#dateChange1').val()));
+                    stock_where_config.ed = $('#dateChange2').val();
+                    telegram_render_setting.where = stock_where_config;
+                    data_instance.reload({where: stock_where_config});
+                    return false;
+                })
+
+                for (var i = 0; i < res.length; i++) {
+                    if (res[i].read === 0)
+                        // $('.article-list-item ew-datagrid-item')[i].style.fontWeight='bold';
+                        //  console.log($('h2').eq(i))
+                        $('h2').eq(i).css("font-weight", 'bold');
+                }
+
+            }
+        };
+        dataGrid.render(telegram_render_setting);
+        dataGrid.on('toolbar(telegram)', function (obj) {
+            alert(1);
+
+        })
+
+        form.on('submit(eSearch)', function (data) {
+            telegram_render_setting.where.code = data.field.code;
+            telegram_render_setting.where.keyword = data.field.keyword;
+            // data_instance.reload({where: search_field});
+            dataGrid.render(telegram_render_setting);
+
+            return false
+        })
+
+
+    })
+</script>

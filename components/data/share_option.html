@@ -1,0 +1,382 @@
+<!--base page-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">股票代码:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="code_or_name" id="stockCode" placeholder="选择股票代码">
+                            <ul class="dropdown-menu-nav" id="stockUl"></ul>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="date" id="shareDate" placeholder="选择日期">
+                            <ul class="dropdown-menu-nav" id="dateUl"></ul>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <div class="layui-input-inline" style="width: 100%">
+                            <input type="radio" name="type" value="all" title="ALL" checked>
+                            <input type="radio" name="type" value="call" title="CALL">
+                            <input type="radio" name="type" value="put" title="PUT">
+                        </div>
+                    </div>
+
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn" lay-filter="eSearchButton" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this" id="shareOption" value="1">期权数据</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="shareOptionsTable" lay-filter="shareOptionsTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--buttons-->
+<script type="text/html" id="followButton">
+    {{# if (d.iffollow){ }}
+
+    <button type="button" class="layui-btn layui-btn-sm" lay-event="eFollow" value={{d.contractcode}}>关注</button>
+    {{# } else{ }}
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-orange" lay-event="eUnFollow"
+            value={{d.contractcode}}>取消关注
+    </button>
+    {{# } }}
+</script>
+<script type="text/html" id="subButton">
+    {{# if (d.ifsub){ }}
+    <button type="button" class="layui-btn layui-btn-sm " lay-event="eSubscribe" value={{d.contractcode}}>订阅</button>
+    {{# } else{ }}
+    <button type="button" class="layui-btn layui-btn-sm layui-bg-orange" lay-event="eUnSubscribe"
+            value={{d.contractcode}}>取消订阅
+    </button>
+    {{# } }}
+
+</script>
+<script type="text/html" id="tickerButton">
+    {{# if(d.hasTicker) {}}
+    <button type="button" class="layui-btn layui-btn-sm">逐笔数据</button>
+    {{#　} else{ }}
+    <button type="button" class="layui-btn layui-btn-sm layui-btn-disabled">逐笔数据</button>
+    {{# } }}
+
+</script>
+
+<!--js-->
+<script type="text/javascript">
+    layui.use(['layer', 'form', 'admin', 'setter', 'table', 'element', 'dropdown', 'laydate'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let table = layui.table;
+        let date = layui.laydate;
+        let admin = layui.admin;
+        let setter = layui.setter;
+
+        setter.baseServer = '';
+
+        // render all form
+        form.render();
+        // follow and subscribe urls
+        let follow_url = setter.djangoAPI + "optionsFollow/";
+        let unfollow_url = setter.djangoAPI + "optionsUnFollow/";
+        let sub_url = setter.djangoAPI + "optionsSub/";
+        let unsub_url = setter.djangoAPI + "optionsUnSub/";
+
+        // date render
+
+        let table_url = setter.djangoAPI + "getOptionsList/"
+        let shareTableConfig = {
+            elem: "#shareOptionsTable",
+            id: "Reload",
+            page: true,
+            size: 15,
+            url: table_url,
+            where: {'code_or_name': '', 'date': '', 'type': '', 'token': setter.getToken(), TrdEnv: setter.TrdEnv},
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'endday', title: '日期', align: 'left', sort: true},
+                {field: 'strike', title: '行权价', sort: true},
+                {field: 'cellput', title: '方向', sort: true},
+                // buttons
+                {field: 'isfollow', title: '关注', templet: '#followButton'},
+                {field: 'issub', title: '订阅', templet: '#subButton'},
+                {field: 'hasTicker', title: '逐笔数据', templet: '#tickerButton'}
+            ]]
+        }
+        const share_table = table.render(shareTableConfig);
+        // mouse event for stock code
+        let code_input = $('#stockCode');
+        let date_input = $('#shareDate')
+        let $repeat = 0, $timeout = undefined;
+        // listen search input code event
+        code_input.bind('input oinput', function () {
+            let input = this;
+            if ($repeat === 0) {
+                $repeat = 1;
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            } else {
+                window.clearTimeout($timeout);
+                $timeout = window.setTimeout(function () {
+                    get_search_stock_name(input);
+                    $repeat = 0;
+                }, 300)
+            }
+        });
+        code_input.click(function () {
+            get_search_stock_name(this);
+        })
+
+        function get_search_stock_date(code) {
+            console.log('加载日期，弹出')
+            admin.req(setter.djangoAPI + "getOptionsEndday/", {
+                code: code,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+            }, function (res) {
+                let response_code = res.code;
+
+
+                if (response_code === 0) {
+                    let input = $('#shareDate');
+                    let data = res.data;
+                    let date_menu = $('#dateUl');
+                    date_menu.empty();
+                    for (let i = 0; i < data.length; i++) {
+                        let li = $('<li><a>' + data[i] + '</a></li>');
+                        li.click(function () {
+                            input[0].value = data[i];
+                            // console.log(drop_menu.hidden);
+                            date_menu[0].hidden = true;
+                        });
+                        // console.log(span);
+                        date_menu.append(li);
+                        // date_menu[0].hidden = false;
+
+                    }
+                    const first_a = date_menu.find("a:first");
+                    input.val($(first_a).text());
+                    $('button[lay-filter="eSearchButton"]').click();
+                }
+            })
+        }
+
+        function get_search_stock_name(input) {
+            let value = input.value;
+            admin.req(setter.djangoAPI + 'getFollowStock/', {
+                word_or_name: value, limit: 15,
+                page: 1,
+                TrdEnv: setter.TrdEnv,
+                token: setter.getToken()
+
+            }, function (res) {
+                let code = res.code;
+                if (code === 0) {
+                    let data = res.data;
+                    let drop_menu = $('#stockUl')
+                    drop_menu.empty();
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i][0].indexOf('US') != -1) {
+                            let li = $('<li><a>' + data[i][0] + data[i][1] + '</a></li>');
+                            li.click(function () {
+                                input.value = data[i][0];
+                                // console.log(drop_menu.hidden);
+                                drop_menu[0].hidden = true;
+                                get_search_stock_date(input.value);
+                            })
+                            drop_menu.append(li);
+                        }
+                    }
+                    drop_menu[0].hidden = false;
+                }
+            });
+
+        }
+
+        form.on('submit(eSearchButton)', function (data) {
+            let filed = data.field;
+            if (filed) {
+
+                admin.req(setter.djangoAPI + "getOptionsStrikePage/", {
+                    code_or_name: filed.code_or_name,
+                    date: filed.date,
+                    type: filed.type,
+                    limit: 15,
+                    TrdEnv: setter.TrdEnv,
+                    token: setter.getToken()
+                }, function (res) {
+                    if (res.code === 0) {
+                        let page = {curr: res.data};
+                        table.reload('Reload', {where: filed, page: page})
+                    }
+                })
+            }
+
+            return false;
+        })
+
+
+        // focus
+        let drop_menu = $('#stockUl');
+        // default is hidden
+        drop_menu[0].hidden = true;
+        let date_menu = $('#dateUl');
+        date_menu[0].hidden = true
+
+        code_input[0].onclick = function () {
+            if (drop_menu[0].children) {
+                drop_menu[0].hidden = false;
+            } else drop_menu[0].hidden = true;
+
+        }
+        date_input[0].onclick = function () {
+            if (date_menu[0].children) {
+                date_menu[0].hidden = false;
+            } else date_menu[0].hidden = true;
+        }
+        // toolbar events
+        table.on('tool(shareOptionsTable)', function (obj) {
+            let event_name = obj.event;
+            let row_data = obj.data;
+            let post_data = {"data": undefined, 'token': undefined};
+            post_data.token = setter.getToken()
+            if (row_data.contractcode) {
+                post_data.data = row_data.contractcode;
+                let index = layer.load(1);
+                switch (event_name) {
+                    case "eFollow":
+                        admin.req(follow_url, post_data, function (r) {
+                            layer.msg(r.msg);
+                            share_table.reload();
+                            layer.close(index);
+                        }, "post");
+                        break;
+                    case "eUnFollow":
+                        admin.req(unfollow_url, post_data, function (r) {
+                            layer.msg(r.msg);
+                            share_table.reload();
+                            layer.close(index);
+                        }, "post");
+                        break;
+                    case "eSubscribe":
+                        admin.req(sub_url, post_data, function (r) {
+                            layer.msg(r.msg);
+                            share_table.reload();
+                            layer.close(index);
+                        }, "post");
+                        break;
+                    case "eUnSubscribe":
+                        admin.req(unsub_url, post_data, function (r) {
+                            layer.msg(r.msg);
+                            share_table.reload();
+                            layer.close(index);
+                        }, "post");
+                        break;
+
+                }
+
+            }
+        })
+        // layer.ready(() => get_search_stock_name(code_input.elem));
+        if (window.data) {
+            let input = {'value': data.code};
+            let stock_name = data.stock_name;
+            console.log(input, stock_name)
+            // code_input.val(data.code);
+
+            $('#stockCode').attr('value', data.code)
+            get_search_stock_date(data.code)
+            // get_search_stock_name(input.value)
+
+        } else {
+            layer.ready(function () {
+                console.log('layer.ready')
+                let value = "";
+                admin.req(setter.djangoAPI + 'getFollowStock/', {
+                    word_or_name: value, limit: 15,
+                    page: 1,
+                    TrdEnv: setter.TrdEnv,
+                    token: setter.getToken()
+                }, function (res) {
+                    let code = res.code;
+                    if (code === 0) {
+                        let data = res.data;
+                        let drop_menu = $('#stockUl')
+                        drop_menu.empty();
+                        for (let i = 0; i < data.length; i++) {
+                            if (data[i][0].indexOf('US') != -1) {
+                                let li = $('<li><a>' + data[i][0] + data[i][1] + '</a></li>');
+                                li.click(function () {
+                                    input.value = data[i][0];
+                                    // console.log(drop_menu.hidden);
+                                    drop_menu[0].hidden = true;
+                                    get_search_stock_date(input.value);
+                                })
+                                drop_menu.append(li);
+                            }
+                        }
+                        $('#stockCode').val(`${data[0][0]}`);
+                        admin.req(setter.djangoAPI + "getOptionsEndday/", {
+                            code: data[0][0],
+                            TrdEnv: setter.TrdEnv,
+                            token: setter.getToken()
+
+                        }, function (res) {
+                            console.log('加载日期完成ready,', code)
+                            let response_code = res.code;
+
+
+                            if (response_code === 0) {
+                                let input = $('#shareDate');
+                                let data = res.data;
+                                let date_menu = $('#dateUl');
+                                date_menu.empty();
+                                for (let i = 0; i < data.length; i++) {
+                                    let li = $('<li><a>' + data[i] + '</a></li>');
+                                    li.click(function () {
+                                        input[0].value = data[i];
+                                        // console.log(drop_menu.hidden);
+                                        date_menu[0].hidden = true;
+                                    });
+                                    // console.log(span);
+                                    date_menu.append(li);
+                                    // date_menu[0].hidden = false;
+
+                                }
+                                const first_a = date_menu.find("a:first");
+                                input.val($(first_a).text());
+                                // click event simulate.
+                                $('button[lay-filter="eSearchButton"]').click();
+                            }
+                        })
+                    }
+
+                })
+            })
+        }
+
+    })
+</script>

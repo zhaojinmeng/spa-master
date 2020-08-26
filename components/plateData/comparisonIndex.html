@@ -1,0 +1,155 @@
+<!--content-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">类型:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu">
+                                <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                       name="class" id="selectClass" placeholder="选择类型">
+                                <ul class="dropdown-menu-nav"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">版块:</label>
+
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu">
+                                <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                       name="plate" id="selectPlate" placeholder="选择板块">
+                                <ul class="dropdown-menu-nav">
+                                    <li value="1"><a>沪港通</a></li>
+                                    <li value="3"><a>深股通</a></li>
+                                    <li value="2"><a>港股通(沪)</a></li>
+                                    <li value="4"><a>港股通(深)</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">资金方向:</label>
+                        <div class="layui-input-inline">
+                            <div class="dropdown-menu">
+                                <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                       name="direction" id="selectDirection" placeholder="选择方向">
+                                <ul class="dropdown-menu-nav">
+                                    <li value="north"><a>北向资金</a></li>
+                                    <li value="south"><a>南向资金</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="date" id="endDateChange" placeholder="选择结束日期">
+                        </div>
+                    </div>
+
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn" lay-filter="eSearchButton" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <table id="plateDataTable" lay-filter="plateDatatable"></table>
+        </div>
+    </div>
+</div>
+
+<!--js-->
+<script type="text/javascript">
+    layui.use(['layer', 'form', 'table','element', 'dropdown', 'laydate'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let date = layui.laydate;
+        let table = layui.table
+        form.render();
+        date.render({
+            elem: '#endDateChange'
+        });
+        let selectPlate = $('#selectPlate');
+
+        let selectUl = selectPlate.next();
+        $.each(selectUl.children(), function (index, dom) {
+            let that = selectPlate;
+            $(dom).click(function (e) {
+                let text = this.textContent;
+                that[0].value = text;
+                let drop_menu = $('.dropdown-menu')
+                drop_menu.removeClass('dropdown-open');
+
+            });
+        })
+
+        // direction
+        let direction = $('#selectDirection');
+        let direction_ul = direction.next();
+        $.each(direction_ul.children(), function (index, dom) {
+            let that = direction;
+            $(dom).click(function () {
+                let text = this.textContent;
+                that[0].value = text;
+                let drop_menu = $('.dropdown-menu')
+                drop_menu.removeClass('dropdown-open');
+            })
+        });
+        // table config
+        let today = new Date();
+
+        let request_query_code = {
+            class: 1,
+            plate: 'all',
+            direction: 'all',
+            date: today.toISOString().slice(0, 10)
+        }
+        let plateTableConfig = {
+            elem: '#plateDataTable',
+            page: true,
+            size: 15,
+            url: "",// backend interface for request data url.
+            where: request_query_code,
+            data: [],
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'field_date', title: '日期', align: 'left', sort: true},
+                {field: 'week', title: '星期', align: 'left', sort: true},
+                {field: '1min', title: "1分钟", align: 'left', sort: true},
+                {field: '3min', title: '3分钟', align: 'left', sort: true},
+                {field: '5min', title: '5分钟', align: 'left', sort: true},
+                {field: '10min', title: '10分钟', align: 'left', sort: true},
+                {field: '15min', title: '15分钟', align: 'left', sort: true},
+                {field: '20min', title: '20分钟', align: 'left', sort: true},
+                {field: '30min', title: '30分钟', align: 'left', sort: true},
+                {field: '40min', title: '40分钟', align: 'left', sort: true},
+                {field: '60min', title: '60分钟', align: 'left', sort: true},
+                {field: '2h', title: '2小时', align: "left", sort: true},
+                {field: '3h', title: '3小时', align: 'left', sort: true},
+                {field: '4h', title: '4小时', align: 'left', sort: true}
+
+
+            ]]
+        };
+        //render
+        table.render(plateTableConfig);
+
+
+        // search
+        form.on('submit(eSearchButton)', function (elem, field, form) {
+            console.log(field);
+            return false;
+        })
+    })
+</script>

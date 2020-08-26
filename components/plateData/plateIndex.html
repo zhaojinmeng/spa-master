@@ -1,0 +1,230 @@
+<!--base page-->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form toolbar table-tool-mini">
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">开始日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="startDate" id="startDateChange" placeholder="选择开始日期">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label w-auto">结束日期:</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" lay-verify="required" autocomplete="off"
+                                   name="endDate" id="endDateChange" placeholder="选择结束日期">
+                        </div>
+                    </div>
+
+                    <div class="layui-inline" style="padding-right: 110px;">
+                        <button class="layui-btn icon-btn" lay-filter="eSearchButton" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this" id="hgt" value="1">沪港通</li>
+                <li id="sgt" value="3">深股通</li>
+                <li id="ggth" value="2">港股通(沪)</li>
+                <li id="ggts" value="4">港股通(深)</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <table id="plateDataTable" lay-filter="plateDatatable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--js-->
+<script type="text/javascript">
+    layui.use(['layer', 'form', 'table', 'element', 'dropdown', 'laydate', 'setter'], function () {
+        let $ = layui.jquery;
+        let layer = layui.layer;
+        let form = layui.form;
+        let table = layui.table;
+        let util = layui.util;
+        let date = layui.laydate;
+        let setter = layui.setter;
+        // form and date to render
+
+        function getPreMonth(nowdate) {
+            nowdate.setMonth(nowdate.getMonth()-1);
+            var y = nowdate.getFullYear();
+            var m = nowdate.getMonth()+1;
+            m = m<10? '0'+m: m
+            var d = nowdate.getDate();
+            d = d<10? '0'+d: d
+            var formatwdate = y+'-'+m+'-'+d;
+            return formatwdate;
+        }
+
+        form.render();
+        date.render({
+            elem: "#startDateChange",
+            value:getPreMonth(new Date())
+        })
+        date.render({
+            elem: "#endDateChange",
+            value:new Date()
+        })
+        // table setting
+        // balance to convert string function
+
+        let request_data_url = setter.djangoAPI + "getPlateHistory/";
+        let today = new Date();
+        let weekday = new Date();
+        weekday.setDate(weekday.getDate() - 15);
+        let request_query_code = {
+            code: 1,
+            ed: $('#endDateChange').val(),
+            sd: $('#startDateChange').val(),
+            token: setter.getToken(),
+            field:'',
+            order:'',
+            TrdEnv:setter.TrdEnv
+        }
+
+
+        // 行数据换颜色
+        function Layui_SetDataTableRowColor(DivId, RowIndex, Color) {
+            try {
+                var div = document.getElementById(DivId);
+                if (div != null) //找到对象了
+                {
+                    var trs = $(".layui-table-body.layui-table-main tr");// 行数据
+                    if (trs != null && trs.length > 0) {
+                        trs[RowIndex].style.color = Color;//字体颜色 
+                    }
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+        }
+
+        let plateTableConfig = {
+            elem: '#plateDataTable',
+            page: true,
+            id: 'Reload',
+            sort: true,
+            autoSort: false,
+            size: 15,
+            url: request_data_url,
+            where: request_query_code,
+            limit: 15,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'field_date', title: '日期', align: 'left', sort: true},
+                {
+                    field: 'TYPE', title: '板块', sort: true, templet: function (d) {
+                        let code_to_plate_name = {
+                            1: '沪港通',
+                            3: '深股通',
+                            2: '港股通(沪)',
+                            4: '港股通(深)'
+                        };
+                        return code_to_plate_name[d.TYPE];
+                    }
+                },
+                {
+                    title: '资金方向', sort: true, templet: function (d) {
+                        let code_to_direction_name = {
+                            1: '北向',
+                            3: '北向',
+                            2: '南向',
+                            4: '南向'
+                        }
+                        return code_to_direction_name[d.TYPE];
+                    }
+                },
+                {
+                    field: 'current_inflow', sort: true, title: '当日净流入(亿)', templet: function (d) {
+                        return d.current_inflow.slice(0,-2);
+                    }
+                },
+                {
+                    field: "buy_turnover", sort: true, title: "买入成交额(亿)", templet: function (d) {
+                        return d.buy_turnover.slice(0,-2);
+                    }
+                },
+                {
+                    field: "sell_turnover", sort: true, title: "卖出成交额(亿)", templet: function (d) {
+                        return d.sell_turnover.slice(0,-2);
+                    }
+                },
+                {field: "index", align: 'left', sort: true, title: "上证指数"},
+                {
+                    field: "UDP", align: 'left', templet: function (d) {
+                        let udp_num = Number(d.UDP);
+                        udp_num = udp_num.toFixed(2);
+                        return udp_num.toString() + '%';
+                    }, sort: true, title: "涨跌幅"
+                },
+
+            ]],
+            done: function (res, curr, count) {
+                persons = res.data
+                for (var i = 0; i < persons.length; i++) {
+                    if (persons[i].UDP > 0)
+                        Layui_SetDataTableRowColor('plateDataTable', i, '#f54545');
+                    else
+                        Layui_SetDataTableRowColor('plateDataTable', i, '#0f990f');
+                }
+            }
+        };
+        let plateTable = table.render(plateTableConfig);
+
+        // search event
+        form.on("submit(eSearchButton)", function (data) {
+            let start_date_string = data.field.startDate;
+            let end_date_string = data.field.endDate;
+            request_query_code.sd = start_date_string
+            request_query_code.ed = end_date_string
+            table.reload('Reload', plateTableConfig);
+            return false;
+        })
+
+
+        // 排序工具 改为监听，并reload table
+        table.on('sort(plateDatatable)', function (obj) {
+            table.reload('Reload', {
+                initSort: obj, where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                    field: obj.field //排序字段   在接口作为参数字段  field order
+                    , order: obj.type //排序方式   在接口作为参数字段  field order
+                }
+            });
+            return false;
+        });
+
+        // table event
+        let index_map_name = {1: '上证指数', 3: '深圳成指', 2: '恒生指数', 4: '恒生指数'}
+        $('.layui-tab-title li').each(function (index, data) {
+            let code = data.getAttribute('value')
+            data.addEventListener('click', function () {
+                request_query_code.code = code
+                plateTableConfig.where = request_query_code;
+                let index_column = plateTableConfig.cols[0].splice(-2, 1)[0];
+                index_column.title = index_map_name[code];
+                plateTableConfig.cols[0].splice(-1, 0, index_column);
+                table.reload('Reload', {
+                    where: {'field': '', 'order': '','code':code},
+                    page: {curr: 1},
+                    initSort: {
+                        field: 'field_date' //排序字段，对应 cols 设定的各字段名
+                        , type: 'desc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+                    }
+                });
+            })
+        })
+    });
+</script>
